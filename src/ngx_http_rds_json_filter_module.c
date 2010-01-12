@@ -224,7 +224,7 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->format, prev->format, json_format_none);
 
-    ngx_conf_merge_str_value(conf->content_type, prev->content_type, ngx_string("text/json"));
+    ngx_conf_merge_str_value(conf->content_type, prev->content_type, ngx_string("application/json"));
 
     return NGX_CONF_OK;
 }
