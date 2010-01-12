@@ -135,76 +135,59 @@ static ngx_int_t
 ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
     ngx_int_t                  rc;
-    ngx_uint_t                 last;
     ngx_chain_t               *cl;
-    ngx_http_request_t        *sr;
     ngx_http_rds_json_ctx_t   *ctx;
-    ngx_http_rds_json_conf_t  *conf;
 
     if (in == NULL || r->header_only) {
-        return ngx_http_next_body_filter(r, in);
+        return ngx_http_rds_json_next_body_filter(r, in);
     }
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_rds_json_filter_module);
 
     if (ctx == NULL) {
-        return ngx_http_next_body_filter(r, in);
+        return ngx_http_rds_json_next_body_filter(r, in);
     }
 
-    conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
-
-    if (!ctx->before_body_sent) {
-        ctx->before_body_sent = 1;
-
-        if (conf->before_body.len) {
-            if (ngx_http_subrequest(r, &conf->before_body, NULL, &sr, NULL, 0)
-                != NGX_OK)
-            {
-                return NGX_ERROR;
+    switch (ctx->state) {
+    case state_expect_header:
+        return ngx_http_rds_json_process_header(r, in, ctx);
+    case state_expect_col;
+        return ngx_http_rds_json_process_col(r, in, ctx);
+    case state_expect_row:
+        return ngx_http_rds_json_process_row(r, in, ctx);
+    case state_expect_field:
+        return ngx_http_rds_json_process_field(r, in, ctx);
+    case state_expect_more_field_data:
+        return ngx_http_rds_json_process_more_field_data(r, in, ctx);
+    case state_done:
+        /* mark the remaining bufs as consumed */
+        for (cl = in; cl; cl = cl->next) {
+            if (cl->buf->tempory && cl->buf->memory) {
+                ngx_pfree(cl->buf->start);
             }
+            cl->buf->pos = cl->buf->last;
         }
-    }
+        return NGX_DONE;
+    default:
+        ngx_log_error(NGX_LOG_ERR, c->log, 0,
+                       "rds_json: invalid internal state: %d"
+                       ctx->state);
 
-    if (conf->after_body.len == 0) {
-        ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
-        return ngx_http_next_body_filter(r, in);
-    }
-
-    last = 0;
-
-    for (cl = in; cl; cl = cl->next) {
-        if (cl->buf->last_buf) {
-            cl->buf->last_buf = 0;
-            cl->buf->sync = 1;
-            last = 1;
-        }
-    }
-
-    rc = ngx_http_next_body_filter(r, in);
-
-    if (rc == NGX_ERROR || !last || conf->after_body.len == 0) {
-        return rc;
-    }
-
-    if (ngx_http_subrequest(r, &conf->after_body, NULL, &sr, NULL, 0)
-        != NGX_OK)
-    {
         return NGX_ERROR;
     }
 
-    ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
-
-    return ngx_http_send_special(r, NGX_HTTP_LAST);
+    /* impossible to reach here */
+    return ngx_http_rds_json_next_body_filter(r, in);
 }
 
 
 static ngx_int_t
 ngx_http_rds_json_filter_init(ngx_conf_t *cf)
 {
-    ngx_http_next_header_filter = ngx_http_top_header_filter;
+    ngx_http_rds_json_next_header_filter = ngx_http_top_header_filter;
     ngx_http_top_header_filter = ngx_http_rds_json_header_filter;
 
-    ngx_http_next_body_filter = ngx_http_top_body_filter;
+    ngx_http_rds_json_next_body_filter = ngx_http_top_body_filter;
     ngx_http_top_body_filter = ngx_http_rds_json_body_filter;
 
     return NGX_OK;
@@ -224,11 +207,10 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
     /*
      * set by ngx_pcalloc():
      *
-     *     conf->before_body = { 0, NULL };
-     *     conf->after_body = { 0, NULL };
-     *     conf->types = { NULL };
-     *     conf->types_keys = NULL;
+     *     conf->content_type = { 0, NULL };
      */
+
+    conf
 
     return conf;
 }
@@ -240,16 +222,10 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_rds_json_conf_t *prev = parent;
     ngx_http_rds_json_conf_t *conf = child;
 
-    ngx_conf_merge_str_value(conf->before_body, prev->before_body, "");
-    ngx_conf_merge_str_value(conf->after_body, prev->after_body, "");
+    ngx_conf_merge_value(conf->format, prev->format, json_format_none);
 
-    if (ngx_http_merge_types(cf, &conf->types_keys, &conf->types,
-                             &prev->types_keys, &prev->types,
-                             ngx_http_html_default_types)
-        != NGX_OK)
-    {
-        return NGX_CONF_ERROR;
-    }
+    ngx_conf_merge_str_value(conf->content_type, prev->content_type, ngx_string("text/json"));
 
     return NGX_CONF_OK;
 }
+
