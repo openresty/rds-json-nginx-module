@@ -5,6 +5,8 @@
 
 
 #include "ngx_http_rds_json_filter_module.h"
+#include "ngx_http_rds_json_util.h"
+
 #include <ngx_config.h>
 
 
