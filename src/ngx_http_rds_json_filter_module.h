@@ -10,6 +10,13 @@
 #include <ngx_http.h>
 
 
+extern ngx_module_t  ngx_http_rds_json_filter_module;
+
+extern ngx_http_output_header_filter_pt  ngx_http_rds_json_next_header_filter;
+
+extern ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
+
+
 typedef enum {
     json_format_none,
     json_format_compact,

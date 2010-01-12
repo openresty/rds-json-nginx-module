@@ -8,6 +8,17 @@
 #include <ngx_config.h>
 
 
+static ngx_conf_enum_t  ngx_http_rds_json_formats[] = {
+    { ngx_string("none"),    json_format_none },
+    { ngx_string("compact"), json_format_compat },
+    { ngx_string("pretty"),  json_format_pretty },
+    { ngx_null_string, 0 }
+};
+
+
+ngx_http_output_header_filter_pt  ngx_http_rds_json_next_header_filter;
+ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
+
 
 static void *ngx_http_rds_json_create_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent,
@@ -21,24 +32,19 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
           |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
           |NGX_CONF_TAKE1,
+      ngx_conf_set_enum_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_rds_json_conf_t, format),
+      &ngx_http_rds_json_formats },
+
+    { ngx_string("rds_json_content_type"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
+          |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_TAKE1,
       ngx_conf_set_str_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, before_body),
+      offsetof(ngx_http_rds_json_conf_t, content_type),
       NULL },
-
-    { ngx_string("add_after_body"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, after_body),
-      NULL },
-
-    { ngx_string("rds_json_types"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
-      ngx_http_types_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, types_keys),
-      &ngx_http_html_default_types[0] },
 
       ngx_null_command
 };
@@ -73,10 +79,6 @@ ngx_module_t  ngx_http_rds_json_filter_module = {
     NULL,                                  /* exit master */
     NGX_MODULE_V1_PADDING
 };
-
-
-static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
-static ngx_http_output_body_filter_pt    ngx_http_next_body_filter;
 
 
 static ngx_int_t
