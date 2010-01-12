@@ -87,31 +87,47 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
     ngx_http_rds_json_ctx_t   *ctx;
     ngx_http_rds_json_conf_t  *conf;
 
-    if (r->headers_out.status != NGX_HTTP_OK || r != r->main) {
-        return ngx_http_next_header_filter(r);
+    if (r->headers_out.status != NGX_HTTP_OK) {
+        return ngx_http_rds_json_next_header_filter(r);
     }
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
-    if (conf->before_body.len == 0 && conf->after_body.len == 0) {
-        return ngx_http_next_header_filter(r);
+    if (conf->format == json_format_none) {
+        return ngx_http_rds_json_next_header_filter(r);
     }
 
-    if (ngx_http_test_content_type(r, &conf->types) == NULL) {
-        return ngx_http_next_header_filter(r);
+    if (ngx_http_rds_json_test_content_type(r, &conf->types) != NGX_OK) {
+        return ngx_http_rds_json_next_header_filter(r);
     }
+
+    r->headers_out.content_type = conf->content_type;
+    r->headers_out.content_type_len = conf->content_type.len;
 
     ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_rds_json_ctx_t));
     if (ctx == NULL) {
         return NGX_ERROR;
     }
 
+    ctx->state = state_expect_header;
+
+    /* set by ngx_pcalloc
+     *      ctx->col_names = NULL
+     *      ctx->col_count = 0
+     *      ctx->cur_col = 0
+     *      ctx->field_offset = 0
+     *      ctx->field_total = 0
+     */
+
     ngx_http_set_ctx(r, ctx, ngx_http_rds_json_filter_module);
 
     ngx_http_clear_content_length(r);
-    ngx_http_clear_accept_ranges(r);
 
-    return ngx_http_next_header_filter(r);
+    r->filter_need_in_memory = 1;
+
+    /* TODO: only send the header when we actually
+     * see the RDS header */
+    return ngx_http_rds_json_next_header_filter(r);
 }
 
 
