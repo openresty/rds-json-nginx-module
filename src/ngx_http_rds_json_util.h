@@ -1,0 +1,5 @@
+#ifndef NGX_HTTP_RDS_JSON_UTIL_H
+#define NGX_HTTP_RDS_JSON_UTIL_H
+
+#endif /* NGX_HTTP_RDS_JSON_UTIL_H */
+

@@ -52,3 +52,7 @@ src/quoting.h
 src/quoting.c
 src/module.h
 src/module.c
+src/util.h
+src/util.c
+src/processor.h
+src/processor.c
