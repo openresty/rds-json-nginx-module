@@ -8,6 +8,7 @@
 
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include <nginx.h>
 
 
 extern ngx_module_t  ngx_http_rds_json_filter_module;
@@ -37,7 +38,8 @@ typedef enum {
     state_expect_col,
     state_expect_row,
     state_expect_field,
-    state_expect_more_field_data
+    state_expect_more_field_data,
+    state_done
 
 } ngx_http_rds_json_state_t;
 

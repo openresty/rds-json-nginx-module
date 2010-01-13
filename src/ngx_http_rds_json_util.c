@@ -4,8 +4,9 @@
 #include "resty_dbd_stream.h"
 #include "ngx_http_rds_json_util.h"
 
+
 ngx_int_t
-ngx_http_rds_json_test_content_type(r)
+ngx_http_rds_json_test_content_type(ngx_http_request_t *r)
 {
     ngx_str_t           *type;
 

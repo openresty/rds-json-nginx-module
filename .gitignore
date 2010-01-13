@@ -56,3 +56,4 @@ src/util.h
 src/util.c
 src/processor.h
 src/processor.c
+src/rds.h

@@ -1,7 +1,10 @@
 #ifndef NGX_HTTP_RDS_JSON_UTIL_H
 #define NGX_HTTP_RDS_JSON_UTIL_H
 
-ngx_int_t ngx_http_rds_json_test_content_type(r);
+#include <ngx_core.h>
+#include <ngx_http.h>
+
+ngx_int_t ngx_http_rds_json_test_content_type(ngx_http_request_t *r);
 
 #endif /* NGX_HTTP_RDS_JSON_UTIL_H */
 

@@ -4,15 +4,21 @@
  */
 
 
+#define DDEBUG 1
+#include "ddebug.h"
+
 #include "ngx_http_rds_json_filter_module.h"
 #include "ngx_http_rds_json_util.h"
+#include "ngx_http_rds_json_processor.h"
 
 #include <ngx_config.h>
 
 
+#define ngx_http_rds_json_content_type  "application/json"
+
 static ngx_conf_enum_t  ngx_http_rds_json_formats[] = {
     { ngx_string("none"),    json_format_none },
-    { ngx_string("compact"), json_format_compat },
+    { ngx_string("compact"), json_format_compact },
     { ngx_string("pretty"),  json_format_pretty },
     { ngx_null_string, 0 }
 };
@@ -99,7 +105,7 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
         return ngx_http_rds_json_next_header_filter(r);
     }
 
-    if (ngx_http_rds_json_test_content_type(r, &conf->types) != NGX_OK) {
+    if (ngx_http_rds_json_test_content_type(r) != NGX_OK) {
         return ngx_http_rds_json_next_header_filter(r);
     }
 
@@ -136,7 +142,6 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
-    ngx_int_t                  rc;
     ngx_chain_t               *cl;
     ngx_http_rds_json_ctx_t   *ctx;
 
@@ -153,7 +158,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     switch (ctx->state) {
     case state_expect_header:
         return ngx_http_rds_json_process_header(r, in, ctx);
-    case state_expect_col;
+    case state_expect_col:
         return ngx_http_rds_json_process_col(r, in, ctx);
     case state_expect_row:
         return ngx_http_rds_json_process_row(r, in, ctx);
@@ -162,17 +167,23 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     case state_expect_more_field_data:
         return ngx_http_rds_json_process_more_field_data(r, in, ctx);
     case state_done:
+
         /* mark the remaining bufs as consumed */
+
         for (cl = in; cl; cl = cl->next) {
-            if (cl->buf->tempory && cl->buf->memory) {
-                ngx_pfree(cl->buf->start);
+
+            if (cl->buf->temporary && cl->buf->memory) {
+                ngx_pfree(r->pool, cl->buf->start);
             }
+
             cl->buf->pos = cl->buf->last;
         }
+
         return NGX_DONE;
+
     default:
-        ngx_log_error(NGX_LOG_ERR, c->log, 0,
-                       "rds_json: invalid internal state: %d"
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                       "rds_json: invalid internal state: %d",
                        ctx->state);
 
         return NGX_ERROR;
@@ -212,7 +223,7 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
      *     conf->content_type = { 0, NULL };
      */
 
-    conf
+    conf->format = NGX_CONF_UNSET_UINT;
 
     return conf;
 }
@@ -224,9 +235,10 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_rds_json_conf_t *prev = parent;
     ngx_http_rds_json_conf_t *conf = child;
 
-    ngx_conf_merge_value(conf->format, prev->format, json_format_none);
+    ngx_conf_merge_uint_value(conf->format, prev->format, json_format_none);
 
-    ngx_conf_merge_str_value(conf->content_type, prev->content_type, ngx_string("application/json"));
+    ngx_conf_merge_str_value(conf->content_type, prev->content_type,
+            ngx_http_rds_json_content_type);
 
     return NGX_CONF_OK;
 }
