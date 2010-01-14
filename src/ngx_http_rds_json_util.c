@@ -21,3 +21,18 @@ ngx_http_rds_json_test_content_type(ngx_http_request_t *r)
     return NGX_OK;
 }
 
+
+void
+ngx_http_rds_json_discard_bufs(ngx_pool_t *pool, ngx_chain_t *in) {
+    ngx_chain_t         *cl;
+
+    for (cl = in->next; cl; cl = cl->next) {
+        if (cl->buf->temporary && cl->buf->memory
+                && ngx_buf_size(cl->buf) > 0) {
+            ngx_pfree(pool, cl->buf->start);
+        }
+
+        cl->buf->pos = cl->buf->last;
+    }
+}
+

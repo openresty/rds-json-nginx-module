@@ -6,6 +6,8 @@
 #ifndef NGX_HTTP_RDS_JSON_FILTER_MODULE_H
 #define NGX_HTTP_RDS_JSON_FILTER_MODULE_H
 
+#include "ngx_http_rds.h"
+
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <nginx.h>
@@ -50,6 +52,8 @@ typedef struct {
     ngx_str_t                           *col_name;
     ngx_uint_t                           col_count;
     ngx_uint_t                           cur_col;
+
+    ngx_http_rds_column_t               *cols;
 
     uint32_t                             field_offset;
     uint32_t                             field_total;

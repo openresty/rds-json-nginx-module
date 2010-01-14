@@ -145,7 +145,6 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
-    ngx_chain_t               *cl;
     ngx_http_rds_json_ctx_t   *ctx;
 
     if (in == NULL || r->header_only) {
@@ -173,14 +172,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         /* mark the remaining bufs as consumed */
 
-        for (cl = in; cl; cl = cl->next) {
-
-            if (cl->buf->temporary && cl->buf->memory) {
-                ngx_pfree(r->pool, cl->buf->start);
-            }
-
-            cl->buf->pos = cl->buf->last;
-        }
+        ngx_http_rds_json_discard_bufs(r->pool, in);
 
         return NGX_DONE;
 
