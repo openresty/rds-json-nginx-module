@@ -54,9 +54,15 @@ typedef struct {
     ngx_uint_t                           cur_col;
 
     ngx_http_rds_column_t               *cols;
+    size_t                               row;
 
     uint32_t                             field_offset;
     uint32_t                             field_total;
+
+    ngx_buf_tag_t                        tag;
+
+    ngx_chain_t                         *busy_bufs;
+    ngx_chain_t                         *free_bufs;
 
 } ngx_http_rds_json_ctx_t;
 

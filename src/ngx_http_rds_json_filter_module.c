@@ -116,13 +116,18 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
     r->headers_out.content_type_len = conf->content_type.len;
 
     ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_rds_json_ctx_t));
+
     if (ctx == NULL) {
         return NGX_ERROR;
     }
 
+    ctx->tag = (ngx_buf_tag_t) &ngx_http_rds_json_filter_module;
+
     ctx->state = state_expect_header;
 
     /* set by ngx_pcalloc
+     *      ctx->busy_bufs = NULL
+     *      ctx->free_bufs = NULL
      *      ctx->col_names = NULL
      *      ctx->col_count = 0
      *      ctx->cur_col = 0

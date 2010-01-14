@@ -130,5 +130,14 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 }
 
 
+static ngx_int_t
+ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
+        ngx_http_rds_column_t *col)
+{
+    /* TODO */
+    return NGX_OK;
+}
+
+
 #endif /* NGX_HTTP_RDS_UTILS_H */
 
