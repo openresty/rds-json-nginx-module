@@ -131,9 +131,13 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 
     b->pos += sizeof(uint64_t);
 
+    /* save insert id */
+
     header->insert_id = *(uint64_t *)b->pos;
 
     b->pos += sizeof(uint64_t);
+
+    /* save column count */
 
     header->column_count = *(uint16_t *) b->pos;
 
