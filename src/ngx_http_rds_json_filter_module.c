@@ -133,6 +133,7 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
      *      ctx->cur_col = 0
      *      ctx->field_offset = 0
      *      ctx->field_total = 0
+     *      ctx->field_data_rest = 0
      */
 
     ngx_http_set_ctx(r, ctx, ngx_http_rds_json_filter_module);

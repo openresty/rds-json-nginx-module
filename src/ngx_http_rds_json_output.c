@@ -64,3 +64,25 @@ ngx_http_rds_json_output_chain(ngx_http_request_t *r,
     return rc;
 }
 
+
+ngx_int_t
+ngx_http_rds_json_output_field(ngx_http_request_t *r,
+        ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len)
+{
+    ngx_http_rds_column_t               *col;
+
+    col = &ctx->cols[ctx->cur_col];
+
+    /* TODO */
+    return NGX_OK;
+}
+
+
+ngx_int_t
+ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
+        ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len)
+{
+    /* TODO */
+    return NGX_OK;
+}
+

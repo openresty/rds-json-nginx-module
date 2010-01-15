@@ -64,6 +64,8 @@ typedef struct {
     ngx_chain_t                         *busy_bufs;
     ngx_chain_t                         *free_bufs;
 
+    uint32_t                             field_data_rest;
+
 } ngx_http_rds_json_ctx_t;
 
 
