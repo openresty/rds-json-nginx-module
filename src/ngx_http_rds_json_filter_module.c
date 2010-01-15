@@ -99,6 +99,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
      * {"errcode":403,"error":"Permission denied"}
      * for HTTP error pages? */
     if (r->headers_out.status != NGX_HTTP_OK) {
+        dd("status is not OK: %d, skipping", r->headers_out.status);
+
         return ngx_http_rds_json_next_header_filter(r);
     }
 

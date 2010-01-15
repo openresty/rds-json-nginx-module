@@ -58,13 +58,15 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
         return NGX_ERROR;
     }
 
+    dd("RDS format version: %d", (int) *(uint32_t *) b->pos);
+
     b->pos += sizeof(uint32_t);
 
-    /* check RDS format type */
+    /* check RDS result type */
 
     if (*b->pos != 0) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds: RDS format type must be 0 for now");
+               "rds: RDS result type must be 0 for now");
         return NGX_ERROR;
     }
 
@@ -87,6 +89,8 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
     header->errstr.len = *(uint16_t *) b->pos;
 
     b->pos += sizeof(uint16_t);
+
+    dd("errstr len: %d", (int) header->errstr.len);
 
     /* check the rest data's size */
 

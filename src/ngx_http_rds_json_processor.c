@@ -47,7 +47,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: there's unexpected remaining data in the buf");
+                    "rds_json: header: there's unexpected remaining data in the buf");
             return NGX_ERROR;
         }
 
@@ -105,6 +105,13 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
+    if (b->pos == b->last) {
+        if (b->temporary) {
+            ngx_pfree(r->pool, b->start);
+        }
+        in = in->next;
+    }
+
     ctx->cur_col++;
 
     if (ctx->cur_col >= ctx->col_count) {
@@ -121,12 +128,10 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
             return rc;
         }
 
-        return ngx_http_rds_json_process_row(r,
-                b->pos == b->last ? in->next : in, ctx);
+        return ngx_http_rds_json_process_row(r, in, ctx);
     }
 
-    return ngx_http_rds_json_process_col(r,
-            b->pos == b->last ? in->next : in, ctx);
+    return ngx_http_rds_json_process_col(r, in, ctx);
 }
 
 
@@ -159,9 +164,9 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
         /* end of row list */
         ctx->state = state_done;
 
-        if (b->last != b->pos) {
+        if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: there's unexpected remaining data in the buf");
+                    "rds_json: row: there's unexpected remaining data in the buf");
             return NGX_ERROR;
         }
 
@@ -179,8 +184,14 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
     ctx->cur_col = 0;
     ctx->state = state_expect_field;
 
-    return ngx_http_rds_json_process_field(r,
-            b->pos == b->last ? in->next : in, ctx);
+    if (b->pos == b->last) {
+        if (b->temporary) {
+            ngx_pfree(r->pool, b->start);
+        }
+        in = in->next;
+    }
+
+    return ngx_http_rds_json_process_field(r, in, ctx);
 }
 
 
