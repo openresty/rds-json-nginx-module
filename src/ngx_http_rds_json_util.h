@@ -4,6 +4,18 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#ifndef NGX_UINT64_LEN
+#define NGX_UINT64_LEN (sizeof("18446744073709551615") - 1)
+#endif
+
+#ifndef NGX_UINT16_LEN
+#define NGX_UINT16_LEN (sizeof("65535") - 1)
+#endif
+
+#ifndef ngx_copy_const_str
+#define ngx_copy_const_str(p, s)  ngx_copy(p, s, sizeof(s) - 1)
+#endif
+
 
 uintptr_t ngx_http_rds_json_escape_json_str(u_char *dst, u_char *src, size_t size);
 
