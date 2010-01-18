@@ -21,7 +21,7 @@ Synopsis
             drizzle_query 'select * from cats';
             drizzle_pass my_mysql_upstream;
 
-            rds_json compact;
+            rds_json on;
         }
         ...
     }
