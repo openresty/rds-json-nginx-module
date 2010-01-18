@@ -7,7 +7,7 @@
 #define NGX_HTTP_RDS_UTILS_H
 
 
-static ngx_int_t
+static ngx_inline ngx_int_t
 ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
         ngx_http_rds_header_t *header)
 {
@@ -134,11 +134,53 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 }
 
 
-static ngx_int_t
+static ngx_inline ngx_int_t
 ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
         ngx_http_rds_column_t *col)
 {
-    /* TODO */
+    ssize_t         rest;
+
+    rest = sizeof(uint16_t)         /* std col type */
+         + sizeof(uint16_t)         /* driver col type */
+         + sizeof(uint16_t)         /* col name str len */
+         ;
+
+    if (b->last - b->pos < rest) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds: column spec is incomplete in the buf");
+        return NGX_ERROR;
+    }
+
+    /* save standard column type */
+    col->std_type = *(uint16_t *) b->pos;
+    b->pos += sizeof(uint16_t);
+
+    /* save driver-specific column type */
+    col->drv_type = *(uint16_t *) b->pos;
+    b->pos += sizeof(uint16_t);
+
+    /* read column name string length */
+    col->name.len = *(uint16_t *) b->pos;
+    b->pos += sizeof(uint16_t);
+
+    rest = col->name.len;
+
+    if (b->last - b->pos < rest) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds: column name string is incomplete in the buf");
+        return NGX_ERROR;
+    }
+
+    /* save the column name string data */
+
+    col->name.data = ngx_palloc(r->pool, col->name.len);
+    if (col->name.data == NULL) {
+        return NGX_ERROR;
+    }
+
+    ngx_memcpy(b->pos, col->name.data, col->name.len);
+    b->pos += col->name.len;
+
     return NGX_OK;
 }
 
