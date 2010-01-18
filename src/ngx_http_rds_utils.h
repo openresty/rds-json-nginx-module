@@ -130,6 +130,8 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 
     b->pos += sizeof(uint16_t);
 
+    dd("saved column count: %d", (int) header->col_count);
+
     return NGX_OK;
 }
 
@@ -160,8 +162,15 @@ ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
     b->pos += sizeof(uint16_t);
 
     /* read column name string length */
+
     col->name.len = *(uint16_t *) b->pos;
     b->pos += sizeof(uint16_t);
+
+    if (col->name.len == 0) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds_json: column name empty");
+        return NGX_ERROR;
+    }
 
     rest = col->name.len;
 
@@ -178,8 +187,11 @@ ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
         return NGX_ERROR;
     }
 
-    ngx_memcpy(b->pos, col->name.data, col->name.len);
+    ngx_memcpy(col->name.data, b->pos, col->name.len);
     b->pos += col->name.len;
+
+    dd("saved column name \"%.*s\" (len %d, offset %d)", col->name.len, col->name.data,
+            (int) col->name.len, (int) (b->pos - b->start));
 
     return NGX_OK;
 }

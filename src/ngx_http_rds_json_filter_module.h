@@ -21,7 +21,6 @@ extern ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
 
 
 typedef enum {
-    json_format_none,
     json_format_compact,
     json_format_pretty          /* TODO */
 
@@ -29,6 +28,7 @@ typedef enum {
 
 
 typedef struct {
+    ngx_flag_t                      enabled;
     ngx_http_rds_json_format_t      format;
     ngx_str_t                       content_type;
 

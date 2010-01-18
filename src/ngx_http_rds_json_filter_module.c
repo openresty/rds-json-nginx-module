@@ -17,7 +17,6 @@
 #define ngx_http_rds_json_content_type  "application/json"
 
 static ngx_conf_enum_t  ngx_http_rds_json_formats[] = {
-    { ngx_string("none"),    json_format_none },
     { ngx_string("compact"), json_format_compact },
     { ngx_string("pretty"),  json_format_pretty },
     { ngx_null_string, 0 }
@@ -37,6 +36,15 @@ static ngx_int_t ngx_http_rds_json_filter_init(ngx_conf_t *cf);
 static ngx_command_t  ngx_http_rds_json_commands[] = {
 
     { ngx_string("rds_json"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
+          |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_rds_json_conf_t, enabled),
+      NULL },
+
+    { ngx_string("rds_json_format"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
           |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
           |NGX_CONF_TAKE1,
@@ -106,7 +114,7 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
-    if (conf->format == json_format_none) {
+    if ( ! conf->enabled) {
         return ngx_http_rds_json_next_header_filter(r);
     }
 
@@ -226,6 +234,7 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
      *     conf->content_type = { 0, NULL };
      */
 
+    conf->enabled = NGX_CONF_UNSET;
     conf->format = NGX_CONF_UNSET_UINT;
 
     return conf;
@@ -238,7 +247,9 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_rds_json_conf_t *prev = parent;
     ngx_http_rds_json_conf_t *conf = child;
 
-    ngx_conf_merge_uint_value(conf->format, prev->format, json_format_none);
+    ngx_conf_merge_value(conf->enabled, prev->enabled, 0);
+
+    ngx_conf_merge_uint_value(conf->format, prev->format, json_format_compact);
 
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
             ngx_http_rds_json_content_type);
