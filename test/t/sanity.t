@@ -254,3 +254,111 @@ GET /test
 [{"id":1,"val":3.1415926}]
 --- skip_nginx: 2: < 0.7.46
 
+
+
+=== TEST 9: text blob field
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, body text);";
+        echo;
+        echo_location /mysql "insert into foo (body) values ('hello');";
+        echo;
+        echo_location /mysql "select * from foo;";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+[{"id":1,"body":"hello"}]
+--- skip_nginx: 2: < 0.7.46
+
+
+
+=== TEST 10: bool blob field
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, flag bool);";
+        echo;
+        echo_location /mysql "insert into foo (flag) values (true);";
+        echo;
+        echo_location /mysql "insert into foo (flag) values (false);";
+        echo;
+        echo_location /mysql "select * from foo order by id;";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+{"errcode":0,"insert_id":2,"affected_rows":1}
+[{"id":1,"flag":1},{"id":2,"flag":0}]
+--- skip_nginx: 2: < 0.7.46
+
+
+
+=== TEST 11: bit field
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, flag bit);";
+        echo;
+        echo_location /mysql "insert into foo (flag) values (1);";
+        echo;
+        echo_location /mysql "insert into foo (flag) values (0);";
+        echo;
+        echo_location /mysql "select * from foo order by id;";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+{"errcode":0,"insert_id":2,"affected_rows":1}
+[{"id":1,"flag":"\u0001"},{"id":2,"flag":"\u0000"}]
+--- skip_nginx: 2: < 0.7.46
+

@@ -293,6 +293,7 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                         "rds_json: output field: invalid boolean value "
                         "leading by \"%*s\"", len, data);
+                return NGX_ERROR;
             }
             break;
 
