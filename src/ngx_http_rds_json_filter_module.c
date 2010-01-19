@@ -184,13 +184,16 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return ngx_http_rds_json_process_field(r, in, ctx);
     case state_expect_more_field_data:
         return ngx_http_rds_json_process_more_field_data(r, in, ctx);
+
     case state_done:
 
         /* mark the remaining bufs as consumed */
 
+        dd("discarding bufs");
+
         ngx_http_rds_json_discard_bufs(r->pool, in);
 
-        return NGX_DONE;
+        return NGX_OK;
 
     default:
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
