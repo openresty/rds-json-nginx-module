@@ -362,3 +362,66 @@ GET /test
 [{"id":1,"flag":"\u0001"},{"id":2,"flag":"\u0000"}]
 --- skip_nginx: 2: < 0.7.46
 
+
+
+=== TEST 12: date type
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, created date);";
+        echo;
+        echo_location /mysql "insert into foo (created) values ('2007-05-24');";
+        echo;
+        echo_location /mysql "select * from foo";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+[{"id":1,"created":"2007-05-24"}]
+
+
+
+=== TEST 13: strings need to be escaped
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, body char(25));";
+        echo;
+        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\b');";
+        echo;
+        echo_location /mysql "select * from foo";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+--- SKIP
+
