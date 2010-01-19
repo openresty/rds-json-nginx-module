@@ -5,7 +5,7 @@ use Test::Nginx::Socket;
 
 repeat_each(1);
 
-plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 2;
+plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 
 run_tests();
 
@@ -102,6 +102,7 @@ GET /mysql
 {"errcode":0,"errstr":Rows matched: 1  Changed: 0  Warnings: 0"}
 
 
+
 === TEST 4: select empty result
 little-endian systems only
 
@@ -159,4 +160,27 @@ X-Resty-DBD-Module:
 Content-Type: application/json
 --- response_body chop
 {"errcode":0,"errstr":Rows matched: 1  Changed: 0  Warnings: 0"}
+
+
+
+=== TEST 6: invalid SQL
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query "select '32";
+        rds_json on;
+    }
+--- response_headers
+X-Resty-DBD-Module:
+Content-Type: text/html
+--- request
+GET /mysql
+--- error_code: 502
+--- response_body_like: 502 Bad Gateway
 
