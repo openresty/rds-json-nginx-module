@@ -136,7 +136,7 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
             (uint32_t) header->std_errcode);
 
     if (header->errstr.len) {
-        b->last = ngx_copy_const_str(b->last, ",\"errstr\":");
+        b->last = ngx_copy_const_str(b->last, ",\"errstr\":\"");
 
         if (escape == 0) {
             b->last = ngx_copy(b->last, header->errstr.data,

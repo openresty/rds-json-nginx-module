@@ -16,8 +16,6 @@ run_tests();
 __DATA__
 
 === TEST 1: sanity
-little-endian systems only
-
 db init:
 
 create table cats (id integer, name text);
@@ -48,8 +46,6 @@ Content-Type: application/json
 
 
 === TEST 2: keep-alive
-little-endian systems only
-
 db init:
 
 create table cats (id integer, name text);
@@ -77,8 +73,6 @@ GET /mysql
 
 
 === TEST 3: update
-little-endian systems only
-
 db init:
 
 create table cats (id integer, name text);
@@ -101,13 +95,11 @@ insert into cats (id, name) values (3, 'bob');
 --- request
 GET /mysql
 --- response_body chop
-{"errcode":0,"errstr":Rows matched: 1  Changed: 0  Warnings: 0"}
+{"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
 
 
 
 === TEST 4: select empty result
-little-endian systems only
-
 db init:
 
 create table cats (id integer, name text);
@@ -134,8 +126,6 @@ GET /mysql
 
 
 === TEST 5: update & no module header
-little-endian systems only
-
 db init:
 
 create table cats (id integer, name text);
@@ -150,18 +140,23 @@ insert into cats (id, name) values (3, 'bob');
     }
 --- config
     location /mysql {
+        if ($arg_name ~ '[^A-Za-z0-9]') {
+            return 400;
+        }
+
         drizzle_pass backend;
         drizzle_module_header off;
-        drizzle_query "update cats set name='bob' where name='bob'";
+        drizzle_query "update cats set name='$arg_name' where name='$arg_name'";
+
         rds_json on;
     }
 --- request
-GET /mysql
+GET /mysql?name=bob
 --- response_headers
 X-Resty-DBD-Module: 
 Content-Type: application/json
 --- response_body chop
-{"errcode":0,"errstr":Rows matched: 1  Changed: 0  Warnings: 0"}
+{"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
 
 
 
