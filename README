@@ -39,6 +39,7 @@ Installation
 
         # Here we assume you would install you nginx under /opt/nginx/.
         $ ./configure --prefix=/opt/nginx \
+            --add-module=/path/to/drizzle-nginx-module
             --add-module=/path/to/rds-json-nginx-module
 
         $ make -j2
@@ -63,6 +64,10 @@ Compatibility
 TODO
 
 Known Issues
+
+See Also
+
+    * ngx_drizzle ( http://github.com/chaoslawful/drizzle-nginx-module )
 
 Author
     agentzh (章亦春) <agentzh at gmail dot com>
