@@ -241,6 +241,12 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
         size += sizeof("null") - 1;
     } else {
         switch (col->std_type & 0xc000) {
+        case rds_rough_col_type_float:
+            dd("float field found");
+            /* TODO check validity of floating numbers */
+            size += len;
+            break;
+
         case rds_rough_col_type_int:
             dd("int field found");
 
@@ -360,7 +366,7 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
         case rds_rough_col_type_float:
             b->last = ngx_copy(b->last, data, len);
 
-            dd("copy over int value: %.*s", len, data);
+            dd("copy over int/float value: %.*s", len, data);
 
             break;
 
@@ -386,6 +392,8 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
             if (ctx->field_data_rest == 0) {
                 *b->last++ = '"';
             }
+
+            break;
         }
     }
 
@@ -434,7 +442,8 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
 
     col = &ctx->cols[ctx->cur_col];
 
-    if (col->std_type & rds_rough_col_type_int) {
+    switch (col->std_type & 0xc000) {
+    case rds_rough_col_type_int:
         for (p = data, i = 0; i < len; i++, p++) {
             if (*p < '0' || *p > '9') {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
@@ -445,11 +454,14 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         }
 
         size += len;
+        break;
 
-    } else if (col->std_type & rds_rough_col_type_float) {
+    case rds_rough_col_type_float:
         /* TODO: check validity of floating-point field values */
         size += len;
-    } else {
+        break;
+
+    default:
         /* string */
         escape = ngx_http_rds_json_escape_json_str(NULL, data, len);
         size = len + escape;

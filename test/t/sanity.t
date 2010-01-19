@@ -7,9 +7,11 @@ repeat_each(1);
 
 plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 
+no_long_string();
+
 run_tests();
 
-no_diff();
+#no_diff();
 
 __DATA__
 
@@ -183,4 +185,72 @@ Content-Type: text/html
 GET /mysql
 --- error_code: 502
 --- response_body_like: 502 Bad Gateway
+
+
+
+=== TEST 7: single row, single col
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists singles";
+        echo;
+        echo_location /mysql "create table singles (name varchar(15));";
+        echo;
+        echo_location /mysql "insert into singles values ('marry');";
+        echo;
+        echo_location /mysql "select * from singles;";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"affected_rows":1}
+[{"name":"marry"}]
+--- skip_nginx: 2: < 0.7.46
+
+
+
+=== TEST 8: single row, single col
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id int not null, primary key (id), val real);";
+        echo;
+        echo_location /mysql "insert into foo (val) values (3.1415926);";
+        echo;
+        echo_location /mysql "select * from foo;";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"affected_rows":1}
+[{"id":0,"val":3.1415926}]
+--- skip_nginx: 2: < 0.7.46
 
