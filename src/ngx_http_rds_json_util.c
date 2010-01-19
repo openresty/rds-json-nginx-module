@@ -1,4 +1,4 @@
-#define DDEBUG 1
+#define DDEBUG 0
 #include "ddebug.h"
 
 #include "resty_dbd_stream.h"
