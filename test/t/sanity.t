@@ -409,7 +409,7 @@ GET /test
         echo;
         echo_location /mysql "create table foo (id serial, body char(25));";
         echo;
-        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\b');";
+        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\b你好\Z');";
         echo;
         echo_location /mysql "select * from foo";
         echo;
@@ -423,5 +423,8 @@ GET /test
 --- request
 GET /test
 --- response_body
---- SKIP
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+[{"id":1,"body":"a\r\nb\b你好\u001a"}]
 

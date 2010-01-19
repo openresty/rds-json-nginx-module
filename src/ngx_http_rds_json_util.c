@@ -34,6 +34,7 @@ ngx_http_rds_json_escape_json_str(u_char *dst, u_char *src, size_t size)
                     if (*src < 32) {
                         n += sizeof("\\u00xx") - 2;
                     }
+
                     break;
                 }
             }
@@ -91,6 +92,9 @@ ngx_http_rds_json_escape_json_str(u_char *dst, u_char *src, size_t size)
                     *dst++ = '0';
                     *dst++ = hex[*src >> 4];
                     *dst++ = hex[*src & 0x0f];
+                    src++;
+                } else {
+                    *dst++ = *src;
                 }
                 break;
             } /* switch */

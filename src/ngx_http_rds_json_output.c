@@ -4,7 +4,7 @@
  */
 
 
-#define DDEBUG 1
+#define DDEBUG 0
 #include "ddebug.h"
 
 #include "ngx_http_rds_json_filter_module.h"
@@ -386,8 +386,18 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
             if (val_escape == 0) {
                 b->last = ngx_copy(b->last, data, len);
             } else {
+                dd("field: string value escape non-zero: %d",
+                        (int) val_escape);
+
+#if DDEBUG
+                p = b->last;
+#endif
+
                 b->last = (u_char *) ngx_http_rds_json_escape_json_str(b->last,
                         data, len);
+
+                dd("escaped value \"%*.s\" (len %d)", len + val_escape,
+                        p, (int) len + val_escape);
             }
 
             if (ctx->field_data_rest == 0) {
@@ -489,17 +499,23 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
 
     /* fill up the buffer */
 
-    if (col->std_type & rds_rough_col_type_int ||
-            col->std_type & rds_rough_col_type_float)
-    {
+    switch (col->std_type & 0xc000) {
+    case rds_rough_col_type_int:
+    case rds_rough_col_type_float:
         b->last = ngx_copy(b->last, data, len);
-    } else if (col->std_type & rds_rough_col_type_bool) {
+        break;
+
+    case rds_rough_col_type_bool:
         /* no op */
-    } else {
+        break;
+
+    default:
         /* string */
         if (escape == 0) {
             b->last = ngx_copy(b->last, data, len);
         } else {
+            dd("col name: string value escape non-zero: %d", (int) escape);
+
             b->last = (u_char *) ngx_http_rds_json_escape_json_str(b->last,
                     data, len);
         }
@@ -507,7 +523,7 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         if (ctx->field_data_rest == 0) {
             *b->last++ = '"';
         }
-    }
+    } /* switch */
 
     if (ctx->field_data_rest == 0 &&
             ctx->cur_col == ctx->col_count - 1)
