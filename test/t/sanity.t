@@ -222,7 +222,7 @@ GET /test
 
 
 
-=== TEST 8: single row, single col
+=== TEST 8: floating number and insert id
 --- http_config
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test
@@ -232,7 +232,7 @@ GET /test
     location /test {
         echo_location /mysql "drop table if exists foo";
         echo;
-        echo_location /mysql "create table foo (id int not null, primary key (id), val real);";
+        echo_location /mysql "create table foo (id serial not null, primary key (id), val real);";
         echo;
         echo_location /mysql "insert into foo (val) values (3.1415926);";
         echo;
@@ -250,7 +250,7 @@ GET /test
 --- response_body
 {"errcode":0}
 {"errcode":0}
-{"errcode":0,"affected_rows":1}
-[{"id":0,"val":3.1415926}]
+{"errcode":0,"insert_id":1,"affected_rows":1}
+[{"id":1,"val":3.1415926}]
 --- skip_nginx: 2: < 0.7.46
 
