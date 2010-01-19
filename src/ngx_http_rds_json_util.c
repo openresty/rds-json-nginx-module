@@ -8,7 +8,103 @@
 uintptr_t
 ngx_http_rds_json_escape_json_str(u_char *dst, u_char *src, size_t size)
 {
-    return (uintptr_t) 0;
+    ngx_uint_t                   n;
+
+    static u_char hex[] = "0123456789abcdef";
+
+    if (dst == NULL) {
+        /* find the number of characters to be escaped */
+
+        n = 0;
+
+        while (size) {
+            /* UTF-8 char has high bit of 1 */
+            if ((*src & 0x80) == 0) {
+                switch (*src) {
+                case '\r':
+                case '\n':
+                case '\\':
+                case '"':
+                case '\f':
+                case '\b':
+                case '\t':
+                    n++;
+                    break;
+                default:
+                    if (*src < 32) {
+                        n += sizeof("\\u00xx") - 2;
+                    }
+                    break;
+                }
+            }
+
+            src++;
+            size--;
+        }
+
+        return (uintptr_t) n;
+    }
+
+    while (size) {
+        if ((*src & 0x80) == 0) {
+            switch (*src) {
+            case '\r':
+                *dst++ = '\\';
+                *dst++ = 'r';
+                break;
+
+            case '\n':
+                *dst++ = '\\';
+                *dst++ = 'n';
+                break;
+
+            case '\\':
+                *dst++ = '\\';
+                *dst++ = '\\';
+                break;
+
+            case '"':
+                *dst++ = '\\';
+                *dst++ = '"';
+                break;
+
+            case '\f':
+                *dst++ = '\\';
+                *dst++ = 'f';
+                break;
+
+            case '\b':
+                *dst++ = '\\';
+                *dst++ = 'b';
+                break;
+
+            case '\t':
+                *dst++ = '\\';
+                *dst++ = 't';
+                break;
+
+            default:
+                if (*src < 32) { /* control chars */
+                    *dst++ = '\\';
+                    *dst++ = 'u';
+                    *dst++ = '0';
+                    *dst++ = '0';
+                    *dst++ = hex[*src >> 4];
+                    *dst++ = hex[*src & 0x0f];
+                }
+                break;
+            } /* switch */
+
+            src++;
+
+        } else {
+            *dst++ = *src++;
+        }
+
+        size--;
+    }
+
+    return (uintptr_t) dst;
 }
 
 
