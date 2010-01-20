@@ -235,7 +235,7 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
         if (b->last - b->pos < (ssize_t) sizeof(uint32_t)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                   "rds_json: field size is incomplete in the buf");
+                   "rds_json: field size is incomplete in the buf: %*s", b->last - b->pos, b->pos);
             return NGX_ERROR;
         }
 

@@ -211,6 +211,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 static ngx_int_t
 ngx_http_rds_json_filter_init(ngx_conf_t *cf)
 {
+    dd("setting next filter");
     ngx_http_rds_json_next_header_filter = ngx_http_top_header_filter;
     ngx_http_top_header_filter = ngx_http_rds_json_header_filter;
 

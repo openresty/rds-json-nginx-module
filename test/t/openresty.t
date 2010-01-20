@@ -18,10 +18,23 @@ our $config = <<'_EOC_';
     default_type 'application/json';
 
     location = '/=/view/PostsByMonth/~/~' {
+        if ($arg__callback !~ '^[A-Za-z]+$') {
+            echo '{"errcode":400,"errstr":"Bad _callback argument"}';
+        }
+
+        echo_before_body "$arg__callback(";
+        echo_after_body ");";
+
         if ($arg_year !~ '^\d{4}$') {
+            echo_before_body "$arg__callback(";
+            echo_after_body ");";
+
             echo '{"errcode":400,"errstr":"Bad year argument"}';
         }
         if ($arg_month !~ '^\d{1,2}$') {
+            echo_before_body "$arg__callback(";
+            echo_after_body ");";
+
             echo '{"errcode":400,"errstr":"Bad month argument"}';
         }
 
@@ -33,13 +46,13 @@ order by created asc";
 
         drizzle_pass backend;
 
-        rds_json on;
-
         error_page 500 = @err500;
         error_page 502 = @err502;
         error_page 503 = @err503;
         error_page 404 = @err404;
         error_page 400 = @err400;
+
+        rds_json on;
     }
 
     location @err500 {
@@ -76,11 +89,13 @@ __DATA__
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /=/view/PostsByMonth/~/~
+GET /=/view/PostsByMonth/~/~?_callback=foo
 --- response_headers
 Content-Type: application/json
 --- response_body
+foo(
 {"errcode":400,"errstr":"Bad month argument"}
+);
 
 
 
@@ -88,11 +103,13 @@ Content-Type: application/json
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /=/view/PostsByMonth/~/~?month=1234
+GET /=/view/PostsByMonth/~/~?month=1234&_callback=foo
 --- response_headers
 Content-Type: application/json
 --- response_body
+foo(
 {"errcode":400,"errstr":"Bad month argument"}
+);
 
 
 
@@ -100,11 +117,12 @@ Content-Type: application/json
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /=/view/PostsByMonth/~/~?year=1984&month=2
+GET /=/view/PostsByMonth/~/~?year=1984&month=2&_callback=bar
 --- response_headers
 Content-Type: application/json
---- response_body chop
-[]
+--- response_body
+bar(
+[]);
 
 
 
@@ -112,21 +130,22 @@ Content-Type: application/json
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /=/view/PostsByMonth/~/~?year=2009&month=10
+GET /=/view/PostsByMonth/~/~?year=2009&month=10&_callback=foo
 --- response_headers
 Content-Type: application/json
---- response_body chop
-[{"id":114,"title":"Hacking on the Nginx echo module","day":15}]
-
+--- response_body
+foo(
+[{"id":114,"title":"Hacking on the Nginx echo module","day":15}]);
 
 
 === TEST 5: PostsByMonth view (non-emtpy result)
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /=/view/PostsByMonth/~/~?year=2009&month=12
+GET /=/view/PostsByMonth/~/~?year=2009&month=12&_callback=foo
 --- response_headers
 Content-Type: application/json
---- response_body chop
-[{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]
+--- response_body
+foo(
+[{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]);
 
