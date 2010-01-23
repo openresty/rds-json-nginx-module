@@ -3,7 +3,12 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(1);
+repeat_each(100);
+
+worker_connections(2048);
+workers(2);
+#master_on;
+log_level('warn');
 
 plan tests => repeat_each() * 3 * blocks();
 
@@ -11,31 +16,23 @@ our $http_config = <<'_EOC_';
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test
              password=some_pass user=monty protocol=mysql;
+        drizzle_keepalive max=200 overflow=reject;
     }
 _EOC_
 
 our $config = <<'_EOC_';
     default_type 'application/json';
 
-    location = '/=/view/PostsByMonth/~/~' {
-        if ($arg__callback !~ '^[A-Za-z]+$') {
-            echo '{"errcode":400,"errstr":"Bad _callback argument"}';
-        }
+    xss_get on;
+    xss_callback_arg _callback;
 
-        echo_before_body "$arg__callback(";
-        echo_after_body ");";
+    location = '/=/view/PostsByMonth/~/~' {
 
         if ($arg_year !~ '^\d{4}$') {
-            echo_before_body "$arg__callback(";
-            echo_after_body ");";
-
-            echo '{"errcode":400,"errstr":"Bad year argument"}';
+            echo_duplicate 1 '{"errcode":400,"errstr":"Bad year argument"}';
         }
         if ($arg_month !~ '^\d{1,2}$') {
-            echo_before_body "$arg__callback(";
-            echo_after_body ");";
-
-            echo '{"errcode":400,"errstr":"Bad month argument"}';
+            echo_duplicate 1 '{"errcode":400,"errstr":"Bad month argument"}';
         }
 
         drizzle_query
@@ -56,23 +53,23 @@ order by created asc";
     }
 
     location @err500 {
-        echo '{"errcode":500,"errstr":"Internal Server Error"}';
+        echo_duplicate 1 '{"errcode":500,"errstr":"Internal Server Error"}';
     }
 
     location @err502 {
-        echo '{"errcode":502,"errstr":"Bad Gateway"}';
+        echo_duplicate 1 '{"errcode":502,"errstr":"Bad Gateway"}';
     }
 
     location @err503 {
-        echo '{"errcode":503,"errstr":"Service Unavailable"}';
+        echo_duplicate 1 '{"errcode":503,"errstr":"Service Unavailable"}';
     }
 
     location @err404 {
-        echo '{"errcode":404,"errstr":"Not Found"}';
+        echo_duplicate 1 '{"errcode":404,"errstr":"Not Found"}';
     }
 
     location @err400 {
-        echo '{"errcode":404,"errstr":"Bad Request"}';
+        echo_duplicate 1 '{"errcode":404,"errstr":"Bad Request"}';
     }
 
 _EOC_
@@ -92,10 +89,8 @@ __DATA__
 GET /=/view/PostsByMonth/~/~?_callback=foo
 --- response_headers
 Content-Type: application/json
---- response_body
-foo(
-{"errcode":400,"errstr":"Bad month argument"}
-);
+--- response_body chop
+foo({"errcode":400,"errstr":"Bad month argument"});
 
 
 
@@ -106,10 +101,8 @@ foo(
 GET /=/view/PostsByMonth/~/~?month=1234&_callback=foo
 --- response_headers
 Content-Type: application/json
---- response_body
-foo(
-{"errcode":400,"errstr":"Bad month argument"}
-);
+--- response_body chop
+foo({"errcode":400,"errstr":"Bad month argument"});
 
 
 
@@ -120,9 +113,8 @@ foo(
 GET /=/view/PostsByMonth/~/~?year=1984&month=2&_callback=bar
 --- response_headers
 Content-Type: application/json
---- response_body
-bar(
-[]);
+--- response_body chop
+bar([]);
 
 
 
@@ -133,9 +125,9 @@ bar(
 GET /=/view/PostsByMonth/~/~?year=2009&month=10&_callback=foo
 --- response_headers
 Content-Type: application/json
---- response_body
-foo(
-[{"id":114,"title":"Hacking on the Nginx echo module","day":15}]);
+--- response_body chop
+foo([{"id":114,"title":"Hacking on the Nginx echo module","day":15}]);
+
 
 
 === TEST 5: PostsByMonth view (non-emtpy result)
@@ -145,7 +137,7 @@ foo(
 GET /=/view/PostsByMonth/~/~?year=2009&month=12&_callback=foo
 --- response_headers
 Content-Type: application/json
---- response_body
-foo(
-[{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]);
+--- response_body chop
+foo([{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]);
+--- ONLY
 
