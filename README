@@ -71,14 +71,6 @@ Author
     agentzh (章亦春) <agentzh at gmail dot com>
 
 Copyright & License
-    The implementation of the builtin connection pool has borrowed
-    a lot of code from Maxim Dounin's upstream_keepalive module.
-    This part of code is copyrighted by Maxim Dounin.
-
-    I also borrowed a lot of code from ngx_http_upstream.c and
-    ngx_http_memcached_module.c in the nginx 0.8.30 core. This
-    part of code is copyrighted by Igor Sysoev.
-
     This module is licenced under the BSD license.
 
     Copyright (c) 2009, Taobao Inc., Alibaba Group ( http://www.taobao.com ).
