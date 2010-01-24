@@ -27,12 +27,11 @@ our $config = <<'_EOC_';
     xss_callback_arg _callback;
 
     location = '/=/view/PostsByMonth/~/~' {
-
         if ($arg_year !~ '^\d{4}$') {
-            echo_duplicate 1 '{"errcode":400,"errstr":"Bad year argument"}';
+            rds_json_ret 400 'Bad "year" argument';
         }
         if ($arg_month !~ '^\d{1,2}$') {
-            echo_duplicate 1 '{"errcode":400,"errstr":"Bad month argument"}';
+            rds_json_ret 400 'Bad "month" argument';
         }
 
         drizzle_query
@@ -52,13 +51,8 @@ order by created asc";
         rds_json on;
     }
 
-    location @err500 {
-        echo_duplicate 1 '{"errcode":500,"errstr":"Internal Server Error"}';
-    }
-
-    location @err502 {
-        echo_duplicate 1 '{"errcode":502,"errstr":"Bad Gateway"}';
-    }
+    location @err500 { rds_json_ret 500 "Internal Server Error"; }
+    location @err502 { rds_json_ret 502 "Bad Gateway"; }
 
     location @err503 {
         echo_duplicate 1 '{"errcode":503,"errstr":"Service Unavailable"}';

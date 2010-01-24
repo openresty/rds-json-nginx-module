@@ -4,7 +4,7 @@
  */
 
 
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include "ngx_http_rds_json_filter_module.h"
@@ -316,7 +316,7 @@ ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
 
     if (value[2].len == 0) {
         ngx_memzero(jlcf->errstr, sizeof(ngx_http_complex_value_t));
-        return NGX_OK;
+        goto done;
     }
 
     ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
@@ -328,6 +328,8 @@ ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
     if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
+
+done:
 
     clcf = ngx_http_conf_get_module_loc_conf(cf,
             ngx_http_core_module);

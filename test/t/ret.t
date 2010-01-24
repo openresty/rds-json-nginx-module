@@ -27,7 +27,21 @@ Content-Type: application/json
 
 
 
-=== TEST 2: set content type
+=== TEST 2: empty errstr
+--- config
+    location /foo {
+        rds_json_ret 400 "";
+    }
+--- request
+    GET /foo
+--- response_headers
+Content-Type: application/json
+--- response_body chop
+{"errcode":400}
+
+
+
+=== TEST 3: set content type
 --- config
     rds_json_content_type 'text/javascript';
     location /foo {
@@ -42,7 +56,7 @@ Content-Type: text/javascript
 
 
 
-=== TEST 3: JSON escaping
+=== TEST 4: JSON escaping
 --- config
     location /foo {
         if ($arg_limit !~ '^\d+$') {
