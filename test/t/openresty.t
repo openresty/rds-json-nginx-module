@@ -71,9 +71,8 @@ order by created asc";
 "select comments.id as id, post, sender, title
 from posts, comments
 where post = posts.id
-order by comments.id dec
-offset $arg_offset
-limit $arg_limit";
+order by comments.id desc
+limit $arg_offset, $arg_limit";
 
         drizzle_pass backend;
     }
@@ -190,11 +189,11 @@ limit $arg_count";
         drizzle_pass backend;
     }
 
-    location = '/=/batch/GetSideBar/~/~' {
+    location = '/=/batch/GetSidebar/~/~' {
         if ($arg_year !~ '^(?:19|20)\d{2}$') {
             rds_json_ret 400 'Bad "year" argument';
         }
-        if ($arg_month !~ '^\d{2}$') {
+        if ($arg_month !~ '^\d{1,2}$') {
             rds_json_ret 400 'Bad "month" argument';
         }
 
@@ -203,6 +202,8 @@ limit $arg_count";
         echo_location_async '/=/view/PostsByMonth/~/~' "year=$arg_year&month=$arg_month";
         echo ',';
         echo_location_async '/=/view/RecentPosts/~/~' "offset=0&limit=6";
+        echo ',';
+        echo_location_async '/=/view/RecentComments/~/~' "offset=0&limit=6";
         echo ',';
         echo_location_async '/=/view/PostCountByMonths/~/~' "offset=0&limit=12";
         echo ']';
@@ -215,11 +216,11 @@ limit $arg_count";
 
         default_type 'application/json';
         echo '[';
-        echo_location "/=/model/Post/id/$arg_id";
+        echo_location_async "/=/model/Post/id/$arg_id";
         echo ',';
-        echo_location "/=/view/PrevNextPost/~/~" "current=$arg_id";
+        echo_location_async "/=/view/PrevNextPost/~/~" "current=$arg_id";
         echo ',';
-        echo_location "/=/model/Comment/post/$arg_id" "_order_by=id:desc";
+        echo_location_async "/=/model/Comment/post/$arg_id" "_order_by=id:desc";
         echo ']';
     }
 
@@ -337,13 +338,14 @@ foo([{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and begi
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /=/batch/GetSideBar/~/~?year=2009&month=10&_callback=foo
+GET /=/batch/GetSidebar/~/~?year=2009&month=10&_callback=foo
 --- response_headers
 Content-Type: application/x-javascript
 --- response_body chop
 foo([
 [{"id":114,"title":"Hacking on the Nginx echo module","day":15}],
 [{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN"},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands"},{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support"},{"id":116,"title":"The \"headers more\" module: scripting input and output filters in your Nginx config file"},{"id":115,"title":"The \"chunkin\" module: Experimental chunked input support for Nginx"},{"id":114,"title":"Hacking on the Nginx echo module"}],
+[{"id":179,"post":101,"sender":"agentzh","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":178,"post":101,"sender":"Winter","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":177,"post":100,"sender":"Mountain","title":"漂在北京"},{"id":176,"post":106,"sender":"agentzh","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":175,"post":106,"sender":"gosber","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":174,"post":105,"sender":"cnangel","title":"SSH::Batch: Treating clusters as maths sets and intervals"}],
 [{"year_month":"2009-12-01","count":3},{"year_month":"2009-11-01","count":2},{"year_month":"2009-10-01","count":1},{"year_month":"2009-09-01","count":5},{"year_month":"2009-05-01","count":2},{"year_month":"2009-04-01","count":3},{"year_month":"2009-02-01","count":2},{"year_month":"2008-12-01","count":3},{"year_month":"2008-11-01","count":2},{"year_month":"2008-10-01","count":2},{"year_month":"2008-09-01","count":4},{"year_month":"2008-08-01","count":2}]]
 );
 
@@ -357,7 +359,8 @@ GET /=/batch/GetFullPost/~/~?id=116&_user=agentzh.Public&_callback=OpenResty.cal
 --- response_headers
 Content-Type: application/x-javascript
 --- response_body chop
---- ONLY
+--- SKIP
+
 
 
 === TEST 8: RowCount
@@ -369,4 +372,26 @@ GET /=/view/RowCount/~/~?model=Post&_callback=foo
 Content-Type: application/x-javascript
 --- response_body chop
 foo([{"count":118}]);
+
+
+
+=== TEST 9: GetFullPost bug
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/model/Comment/post/67
+--- response_headers
+Content-Type: application/json
+--- response_body_like: laser
+--- error_code: 200
+
+=== TEST 10: more field data error
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/model/Post/~/~?_limit=5&_order_by=id%3Adesc&_offset=100
+--- response_headers
+Content-Type: application/json
+--- response_body_like: 测试
+--- error_code: 200
 

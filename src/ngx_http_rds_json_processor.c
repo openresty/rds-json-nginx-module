@@ -331,6 +331,8 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
             return rc;
         }
 
+        b->pos += len;
+
         if (b->pos == b->last) {
             if (b->temporary) {
                 ngx_pfree(r->pool, b->start);
@@ -338,24 +340,24 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
             in = in->next;
         }
 
-        if (len < ctx->field_data_rest) {
-            /* still some data remaining */
+        if (ctx->field_data_rest) {
+            dd("process more field data: still some data remaining");
             continue;
         }
 
-        /* reached the end of the current field */
+        dd("process more field data: reached the end of the current field");
 
         ctx->cur_col++;
 
         if (ctx->cur_col >= ctx->col_count) {
-            dd("reached the end of the current row");
+            dd("process more field data: reached the end of the current row");
 
             ctx->state = state_expect_row;
 
             return ngx_http_rds_json_process_row(r, in, ctx);
         }
 
-        /* read the next field */
+        dd("proces more field data: read the next field");
 
         ctx->state = state_expect_field;
 

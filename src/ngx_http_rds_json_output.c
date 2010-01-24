@@ -4,7 +4,7 @@
  */
 
 
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include "ngx_http_rds_json_filter_module.h"
@@ -398,8 +398,11 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
                 b->last = (u_char *) ngx_http_rds_json_escape_json_str(b->last,
                         data, len);
 
-                dd("escaped value \"%*.s\" (len %d)", len + val_escape,
-                        p, (int) len + val_escape);
+                dd("escaped value \"%.*s\" (len %d, escape %d, escape2 %d)",
+                        len + val_escape,
+                        p, (int) len + val_escape,
+                        (int) val_escape,
+                        (int) (b->last - p) - len);
             }
 
             if (ctx->field_data_rest == 0) {
@@ -413,7 +416,7 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
     if (ctx->field_data_rest == 0
             && ctx->cur_col == ctx->col_count - 1)
     {
-        /* last column in the row */
+        dd("last column in the row");
         *b->last++ = '}';
     }
 
@@ -474,13 +477,19 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         size += len;
         break;
 
+    case rds_rough_col_type_bool:
+        break;
+
     default:
         /* string */
         escape = ngx_http_rds_json_escape_json_str(NULL, data, len);
         size = len + escape;
+
         if (ctx->field_data_rest == 0) {
             size += sizeof("\"") - 1;
         }
+
+        break;
     }
 
     if (ctx->field_data_rest == 0
@@ -515,16 +524,30 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         /* string */
         if (escape == 0) {
             b->last = ngx_copy(b->last, data, len);
+
         } else {
-            dd("col name: string value escape non-zero: %d", (int) escape);
+            dd("more field data: string value escape non-zero: %d", (int) escape);
+
+#if DDEBUG
+                p = b->last;
+#endif
 
             b->last = (u_char *) ngx_http_rds_json_escape_json_str(b->last,
                     data, len);
+
+            dd("escaped value \"%.*s\" (len %d, escape %d, escape2 %d)",
+                    len + escape,
+                    p, (int) len + escape,
+                    (int) escape,
+                    (int) (b->last - p) - len);
+
         }
 
         if (ctx->field_data_rest == 0) {
             *b->last++ = '"';
         }
+
+        break;
     } /* switch */
 
     if (ctx->field_data_rest == 0 &&
@@ -534,9 +557,10 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         *b->last++ = '}';
     }
 
-    if (b->pos != b->last) {
+    if (b->last != b->end) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: output more field data: buffer error");
+                "rds_json: output more field data: buffer error "
+                "(%d left)", (int) (b->end - b->last));
         return NGX_ERROR;
     }
 
