@@ -371,7 +371,8 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
         ;
 
     if (errstr.len) {
-        escape = ngx_http_rds_json_escape_json_str(NULL, data, len);
+        escape = ngx_http_rds_json_escape_json_str(NULL,
+                errstr.data, errstr.len);
 
         len += sizeof(",\"errstr\":\"") - 1
              + errstr.len + escape

@@ -41,7 +41,8 @@ Content-Type: text/javascript
 {"errcode":400,"errstr":"Bad request"}
 
 
-=== TEST 1: JSON escaping
+
+=== TEST 3: JSON escaping
 --- config
     location /foo {
         if ($arg_limit !~ '^\d+$') {
