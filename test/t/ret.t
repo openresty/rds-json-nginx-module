@@ -55,5 +55,4 @@ Content-Type: text/javascript
 Content-Type: application/json
 --- response_body chop
 {"errcode":400,"errstr":"Invalid \"limit\" argument."}
---- SKIP
 

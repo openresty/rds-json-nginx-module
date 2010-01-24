@@ -350,6 +350,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
     ngx_http_rds_json_conf_t        *conf;
     ngx_str_t                        errstr;
     ngx_int_t                        rc;
+    uintptr_t                        escape = 0;
 
     dd("entered ret handler");
 
@@ -370,8 +371,10 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
         ;
 
     if (errstr.len) {
+        escape = ngx_http_rds_json_escape_json_str(NULL, data, len);
+
         len += sizeof(",\"errstr\":\"") - 1
-             + errstr.len
+             + errstr.len + escape
              + sizeof("\"") - 1
              ;
     }
@@ -400,7 +403,12 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
     if (errstr.len) {
         b->last = ngx_copy_const_str(b->last, ",\"errstr\":\"");
 
-        b->last = ngx_copy(b->last, errstr.data, errstr.len);
+        if (escape == 0) {
+            b->last = ngx_copy(b->last, errstr.data, errstr.len);
+        } else {
+            b->last = (u_char *) ngx_http_rds_json_escape_json_str(b->last,
+                    errstr.data, errstr.len);
+        }
 
         *b->last++ = '"';
     }
