@@ -21,8 +21,6 @@ our $http_config = <<'_EOC_';
 _EOC_
 
 our $config = <<'_EOC_';
-    default_type 'application/json';
-
     xss_get on;
     xss_callback_arg _callback;
 
@@ -53,18 +51,9 @@ order by created asc";
 
     location @err500 { rds_json_ret 500 "Internal Server Error"; }
     location @err502 { rds_json_ret 502 "Bad Gateway"; }
-
-    location @err503 {
-        echo_duplicate 1 '{"errcode":503,"errstr":"Service Unavailable"}';
-    }
-
-    location @err404 {
-        echo_duplicate 1 '{"errcode":404,"errstr":"Not Found"}';
-    }
-
-    location @err400 {
-        echo_duplicate 1 '{"errcode":404,"errstr":"Bad Request"}';
-    }
+    location @err503 { rds_json_ret 503 "Service Unavailable"; }
+    location @err404 { rds_json_ret 404 "Not Found"; }
+    location @err400 { rds_json_ret 400 "Bad Request"; }
 
 _EOC_
 
@@ -84,7 +73,7 @@ GET /=/view/PostsByMonth/~/~?_callback=foo
 --- response_headers
 Content-Type: application/x-javascript
 --- response_body chop
-foo({"errcode":400,"errstr":"Bad month argument"});
+foo({"errcode":400,"errstr":"Bad \"month\" argument"});
 
 
 
@@ -96,7 +85,7 @@ GET /=/view/PostsByMonth/~/~?month=1234&_callback=foo
 --- response_headers
 Content-Type: application/x-javascript
 --- response_body chop
-foo({"errcode":400,"errstr":"Bad month argument"});
+foo({"errcode":400,"errstr":"Bad \"month\" argument"});
 
 
 

@@ -58,4 +58,6 @@ src/processor.h
 src/processor.c
 src/rds.h
 src/utils.h
+src/handler.c
+src/handler.h
 util/bench
