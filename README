@@ -21,6 +21,17 @@ Synopsis
 
             rds_json on;
         }
+
+        location /foo {
+            if ($arg_limit !~ '^\d{2}$') {
+                rds_json_ret 400 'Bad "limit" argument';
+            }
+
+            drizzle_query "select * from dogs limit $arg_limit";
+            drizzle_pass my_mysql_upstream;
+
+            rds_json on;
+        }
         ...
     }
 
