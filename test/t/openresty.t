@@ -3,12 +3,13 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(100);
+#repeat_each(100);
+repeat_each(1);
 
-worker_connections(2048);
-workers(2);
+#worker_connections(2048);
+#workers(2);
 #master_on;
-log_level('warn');
+#log_level('debug');
 
 plan tests => repeat_each() * 3 * blocks();
 
@@ -23,6 +24,23 @@ _EOC_
 our $config = <<'_EOC_';
     xss_get on;
     xss_callback_arg _callback;
+    rds_json on;
+
+    # XXX we should implement these in the ngx_xss module
+    location @err500 { rds_json_ret 500 "Internal Server Error"; }
+    location @err404 { rds_json_ret 404 "Not Found"; }
+    location @err400 { rds_json_ret 400 "Bad Request"; }
+    location @err403 { rds_json_ret 403 "Forbidden"; }
+    location @err502 { rds_json_ret 502 "Bad Gateway"; }
+    location @err503 { rds_json_ret 503 "Service Unavailable"; }
+
+    error_page 500 = @err500;
+    error_page 404 = @err404;
+    error_page 403 = @err403;
+    error_page 400 = @err400;
+    error_page 502 = @err502;
+    error_page 503 = @err503;
+    error_page 504 507 = @err500;
 
     location = '/=/view/PostsByMonth/~/~' {
         if ($arg_year !~ '^\d{4}$') {
@@ -39,22 +57,212 @@ where year(created) = $arg_year and month(created) = $arg_month
 order by created asc";
 
         drizzle_pass backend;
-
-        error_page 500 = @err500;
-        error_page 502 = @err502;
-        error_page 503 = @err503;
-        error_page 404 = @err404;
-        error_page 400 = @err400;
-
-        rds_json on;
     }
 
-    location @err500 { rds_json_ret 500 "Internal Server Error"; }
-    location @err502 { rds_json_ret 502 "Bad Gateway"; }
-    location @err503 { rds_json_ret 503 "Service Unavailable"; }
-    location @err404 { rds_json_ret 404 "Not Found"; }
-    location @err400 { rds_json_ret 400 "Bad Request"; }
+    location = '/=/view/RecentComments/~/~' {
+        if ($arg_offset !~ '^\d+$') {
+            rds_json_ret 400 'Bad "offset" argument';
+        }
+        if ($arg_limit !~ '^\d{1,2}$') {
+            rds_json_ret 400 'Bad "limit" argument';
+        }
 
+        drizzle_query
+"select comments.id as id, post, sender, title
+from posts, comments
+where post = posts.id
+order by comments.id dec
+offset $arg_offset
+limit $arg_limit";
+
+        drizzle_pass backend;
+    }
+
+    location = '/=/view/RecentPosts/~/~' {
+        if ($arg_offset !~ '^\d+$') {
+            rds_json_ret 400 'Bad "offset" argument';
+        }
+        if ($arg_limit !~ '^\d{1,2}$') {
+            rds_json_ret 400 'Bad "limit" argument';
+        }
+
+        drizzle_query
+"select id, title
+from posts
+order by id desc
+limit $arg_offset, $arg_limit";
+
+        drizzle_pass backend;
+    }
+
+    location = '/=/view/PrevNextPost/~/~' {
+        if ($arg_current !~ '^\d+$') {
+            rds_json_ret 400 'Bad "current" argument';
+        }
+
+        drizzle_query
+"(select id, title
+  from posts
+  where id < $arg_current
+  order by id desc
+  limit 1)
+  union
+ (select id, title
+  from posts
+  where id > $arg_current
+  order by id asc
+  limit 1)";
+
+        drizzle_pass backend;
+    }
+
+    location = '/=/view/RowCount/~/~' {
+        if ($arg_model = 'Post') {
+            drizzle_query "select count(*) as count from posts";
+            drizzle_pass backend;
+        }
+        if ($arg_model = 'Comment') {
+            drizzle_query "select count(*) as count from comments";
+            drizzle_pass backend;
+        }
+
+        rds_json_ret 400 'Bad "model" argument';
+    }
+
+    location = '/=/view/PostCountByMonths/~/~' {
+        if ($arg_offset !~ '^\d+$') {
+            rds_json_ret 400 'Bad "offset" argument';
+        }
+        if ($arg_limit !~ '^\d{1,2}$') {
+            rds_json_ret 400 'Bad "limit" argument';
+        }
+
+        drizzle_query
+"select date_format(created, '%Y-%m-01') `year_month`, count(*) count
+from posts
+group by `year_month`
+order by `year_month` desc
+limit $arg_offset, $arg_limit";
+        drizzle_pass backend;
+    }
+
+    location = '/=/view/FullPostsByMonth/~/~' {
+        if ($arg_year !~ '^(?:19|20)\d{2}$') {
+            rds_json_ret 400 'Bad "year" argument';
+        }
+        if ($arg_month !~ '^\d{1,2}$') {
+            rds_json_ret 400 'Bad "month" argument';
+        }
+        if ($arg_count !~ '^\d+$') {
+            rds_json_ret 400 'Bad "count" argument';
+        }
+
+        drizzle_query
+"select * from posts
+where year(created) = $arg_year and month(created) = $arg_month
+order by id desc
+limit $arg_count";
+
+        drizzle_pass backend;
+    }
+
+    location = '/=/view/PrevNextArchive/~/~' {
+        if ($arg_now !~ '^\d{4}-\d{1,2}(?:-\d{1,2})?$') {
+            rds_json_ret 400 'Bad "now" argument';
+        }
+        if ($arg_month !~ '^\d{1,2}$') {
+            rds_json_ret 400 'Bad "month" argument';
+        }
+
+        drizzle_query
+"(select 'next' as id, month(created) as month, year(created) as year
+  from posts
+  where created > $arg_now and month(created) <> $arg_month
+  order by created asc
+  limit 1)
+  union
+ (select 'prev' as id, month(created) as month, year(created) as year
+  from posts
+  where created < $arg_now and month(created) <> $arg_month
+  order by created desc
+  limit 1)";
+
+        drizzle_pass backend;
+    }
+
+    location = '/=/batch/GetSideBar/~/~' {
+        if ($arg_year !~ '^(?:19|20)\d{2}$') {
+            rds_json_ret 400 'Bad "year" argument';
+        }
+        if ($arg_month !~ '^\d{2}$') {
+            rds_json_ret 400 'Bad "month" argument';
+        }
+
+        default_type 'application/json';
+        echo '[';
+        echo_location_async '/=/view/PostsByMonth/~/~' "year=$arg_year&month=$arg_month";
+        echo ',';
+        echo_location_async '/=/view/RecentPosts/~/~' "offset=0&limit=6";
+        echo ',';
+        echo_location_async '/=/view/PostCountByMonths/~/~' "offset=0&limit=12";
+        echo ']';
+    }
+
+    location = '/=/batch/GetFullPost/~/~' {
+        if ($arg_id !~ '^\d+$') {
+            rds_json_ret 400 'Bad "id" argument';
+        }
+
+        default_type 'application/json';
+        echo '[';
+        echo_location "/=/model/Post/id/$arg_id";
+        echo ',';
+        echo_location "/=/view/PrevNextPost/~/~" "current=$arg_id";
+        echo ',';
+        echo_location "/=/model/Comment/post/$arg_id" "_order_by=id:desc";
+        echo ']';
+    }
+
+    location ~* '^/=/model/Post/id/(.*)$' {
+        set $id $1;
+        if ($id !~ '^\d+$') {
+            rds_json_ret 400 'Bad "id" value';
+        }
+
+        drizzle_query "select * from posts where id = $id";
+        drizzle_pass backend;
+    }
+
+    location ~* '^/=/model/Comment/post/(.*)$' {
+        set $post $1;
+        if ($post !~ '^\d+$') {
+            rds_json_ret 400 'Bad "post" value';
+        }
+
+        drizzle_query "select * from comments where post = $post";
+        drizzle_pass backend;
+    }
+
+    location = '/=/model/Post/~/~' {
+        if ($arg__offset !~ '^\d+$') {
+            rds_json_ret 400 'Bad "_offset" argument';
+        }
+        if ($arg__limit !~ '^\d{1,2}$') {
+            rds_json_ret 400 'Bad "_limit" argument';
+        }
+        if ($arg__order_by !~ '^([A-Za-z]\w*)%3A(desc|asc)$') {
+            rds_json_ret 400 'Bad "_order_by" argument';
+        }
+        set $col $1;
+        set $order $2;
+        drizzle_query
+"select *
+from posts
+order by `$col` $order
+limit $arg__offset, $arg__limit";
+
+        drizzle_pass backend;
+    }
 _EOC_
 
 no_long_string();
@@ -122,4 +330,43 @@ GET /=/view/PostsByMonth/~/~?year=2009&month=12&_callback=foo
 Content-Type: application/x-javascript
 --- response_body chop
 foo([{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]);
+
+
+
+=== TEST 6: GetSideBar
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/batch/GetSideBar/~/~?year=2009&month=10&_callback=foo
+--- response_headers
+Content-Type: application/x-javascript
+--- response_body chop
+foo([
+[{"id":114,"title":"Hacking on the Nginx echo module","day":15}],
+[{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN"},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands"},{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support"},{"id":116,"title":"The \"headers more\" module: scripting input and output filters in your Nginx config file"},{"id":115,"title":"The \"chunkin\" module: Experimental chunked input support for Nginx"},{"id":114,"title":"Hacking on the Nginx echo module"}],
+[{"year_month":"2009-12-01","count":3},{"year_month":"2009-11-01","count":2},{"year_month":"2009-10-01","count":1},{"year_month":"2009-09-01","count":5},{"year_month":"2009-05-01","count":2},{"year_month":"2009-04-01","count":3},{"year_month":"2009-02-01","count":2},{"year_month":"2008-12-01","count":3},{"year_month":"2008-11-01","count":2},{"year_month":"2008-10-01","count":2},{"year_month":"2008-09-01","count":4},{"year_month":"2008-08-01","count":2}]]
+);
+
+
+
+=== TEST 7: GetFullPost
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/batch/GetFullPost/~/~?id=116&_user=agentzh.Public&_callback=OpenResty.callbackMap%5B1264354204389%5D
+--- response_headers
+Content-Type: application/x-javascript
+--- response_body chop
+--- ONLY
+
+
+=== TEST 8: RowCount
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/view/RowCount/~/~?model=Post&_callback=foo
+--- response_headers
+Content-Type: application/x-javascript
+--- response_body chop
+foo([{"count":118}]);
 

@@ -38,7 +38,7 @@ ngx_http_rds_json_output_literal(ngx_http_request_t *r,
 
     dd("before output chain");
 
-    if (last_buf) {
+    if (last_buf && r == r->main) {
         b->last_buf = 1;
     }
 
@@ -169,7 +169,9 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
     }
 
     /* XXX: make this configurable */
-    b->last_buf = 1;
+    if (r == r->main) {
+        b->last_buf = 1;
+    }
 
     return ngx_http_rds_json_output_chain(r, ctx, cl);
 }

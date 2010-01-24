@@ -56,7 +56,9 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
-    b->last_buf = 1;
+    if (r == r->main) {
+        b->last_buf = 1;
+    }
 
     cl->buf = b;
     cl->next = NULL;
