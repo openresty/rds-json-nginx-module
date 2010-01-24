@@ -88,7 +88,7 @@ __DATA__
 --- request
 GET /=/view/PostsByMonth/~/~?_callback=foo
 --- response_headers
-Content-Type: application/json
+Content-Type: application/x-javascript
 --- response_body chop
 foo({"errcode":400,"errstr":"Bad month argument"});
 
@@ -100,7 +100,7 @@ foo({"errcode":400,"errstr":"Bad month argument"});
 --- request
 GET /=/view/PostsByMonth/~/~?month=1234&_callback=foo
 --- response_headers
-Content-Type: application/json
+Content-Type: application/x-javascript
 --- response_body chop
 foo({"errcode":400,"errstr":"Bad month argument"});
 
@@ -112,7 +112,7 @@ foo({"errcode":400,"errstr":"Bad month argument"});
 --- request
 GET /=/view/PostsByMonth/~/~?year=1984&month=2&_callback=bar
 --- response_headers
-Content-Type: application/json
+Content-Type: application/x-javascript
 --- response_body chop
 bar([]);
 
@@ -124,7 +124,7 @@ bar([]);
 --- request
 GET /=/view/PostsByMonth/~/~?year=2009&month=10&_callback=foo
 --- response_headers
-Content-Type: application/json
+Content-Type: application/x-javascript
 --- response_body chop
 foo([{"id":114,"title":"Hacking on the Nginx echo module","day":15}]);
 
@@ -136,8 +136,7 @@ foo([{"id":114,"title":"Hacking on the Nginx echo module","day":15}]);
 --- request
 GET /=/view/PostsByMonth/~/~?year=2009&month=12&_callback=foo
 --- response_headers
-Content-Type: application/json
+Content-Type: application/x-javascript
 --- response_body chop
 foo([{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]);
---- ONLY
 

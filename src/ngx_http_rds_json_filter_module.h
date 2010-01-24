@@ -28,9 +28,12 @@ typedef enum {
 
 
 typedef struct {
-    ngx_flag_t                      enabled;
-    ngx_http_rds_json_format_t      format;
-    ngx_str_t                       content_type;
+    ngx_flag_t                       enabled;
+    ngx_http_rds_json_format_t       format;
+    ngx_str_t                        content_type;
+
+    ngx_str_t                        errcode;
+    ngx_http_complex_value_t        *errstr;
 
 } ngx_http_rds_json_conf_t;
 
