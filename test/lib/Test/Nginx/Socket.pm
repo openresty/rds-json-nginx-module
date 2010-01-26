@@ -5,7 +5,7 @@ use lib 'inc';
 
 use Test::Base -Base;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use Data::Dumper;
 use Time::HiRes qw(sleep time);
@@ -215,7 +215,7 @@ $parsed_req->{content}";
 
         my $decoded = '';
         while (1) {
-            if ($raw =~ /\G 0 [\ \t]* \r\n \r\n $/gcsx) {
+            if ($raw =~ /\G 0 [\ \t]* \r\n \r\n /gcsx) {
                 last;
             }
             if ($raw =~ m{ \G [\ \t]* ( [A-Fa-f0-9]+ ) [\ \t]* \r\n }gcsx) {
@@ -698,6 +698,14 @@ L<http://wiki.nginx.org/NginxHttpMemcModule>
 =item ngx_drizzle
 
 L<http://github.com/chaoslawful/drizzle-nginx-module>
+
+=item ngx_rds_json
+
+L<http://github.com/agentzh/rds-json-nginx-module>
+
+=item ngx_xss
+
+L<http://github.com/agentzh/xss-nginx-module>
 
 =back
 
