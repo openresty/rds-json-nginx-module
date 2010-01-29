@@ -238,6 +238,7 @@ $config
 }
 
 events {
+    use epoll;
     worker_connections  $WorkerConnections;
 }
 
