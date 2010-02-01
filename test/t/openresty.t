@@ -7,7 +7,7 @@ repeat_each(100);
 #repeat_each(1);
 
 worker_connections(2048);
-workers(2);
+workers(1);
 #master_on;
 log_level('warn');
 
@@ -331,7 +331,8 @@ GET /=/view/PostsByMonth/~/~?year=2009&month=12&_callback=foo
 Content-Type: application/x-javascript
 --- response_body chop
 foo([{"id":117,"title":"Major updates to ngx_chunkin: lots of bug fixes and beginning of keep-alive support","day":4},{"id":118,"title":"ngx_memc: an extended version of ngx_memcached that supports set, add, delete, and many more commands","day":6},{"id":119,"title":"Test::Nginx::LWP and Test::Nginx::Socket are now on CPAN","day":8}]);
---- ONLY
+--- timeout: 90
+
 
 
 === TEST 6: GetSideBar
