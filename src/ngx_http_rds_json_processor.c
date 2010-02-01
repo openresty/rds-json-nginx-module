@@ -29,10 +29,21 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
 
     b = in->buf;
 
-    if ( ! ngx_buf_in_memory(b)) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: buf from upstream not in memory");
-        return NGX_ERROR;
+    if ( ! ngx_buf_in_memory(b) ) {
+        if ( ! ngx_buf_special(b) ) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds_json: process header: buf from "
+                "upstream not in memory");
+            return NGX_ERROR;
+        }
+
+        in = in->next;
+
+        if (in == NULL) {
+            return NGX_OK;
+        }
+
+        b = in->buf;
     }
 
     rc = ngx_http_rds_parse_header(r, b, &header);
@@ -93,10 +104,21 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 
     b = in->buf;
 
-    if ( ! ngx_buf_in_memory(b)) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: buf from upstream not in memory");
-        return NGX_ERROR;
+    if ( ! ngx_buf_in_memory(b) ) {
+        if ( ! ngx_buf_special(b) ) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds_json: process col: buf from "
+                "upstream not in memory");
+            return NGX_ERROR;
+        }
+
+        in = in->next;
+
+        if (in == NULL) {
+            return NGX_OK;
+        }
+
+        b = in->buf;
     }
 
     rc = ngx_http_rds_parse_col(r, b, &ctx->cols[ctx->cur_col]);
@@ -157,10 +179,21 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
     b = in->buf;
 
-    if ( ! ngx_buf_in_memory(b)) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: buf from upstream not in memory");
-        return NGX_ERROR;
+    if ( ! ngx_buf_in_memory(b) ) {
+        if ( ! ngx_buf_special(b) ) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds_json: process row: buf from "
+                "upstream not in memory");
+            return NGX_ERROR;
+        }
+
+        in = in->next;
+
+        if (in == NULL) {
+            return NGX_OK;
+        }
+
+        b = in->buf;
     }
 
     if (b->last - b->pos < (ssize_t) sizeof(uint8_t)) {
@@ -225,10 +258,21 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
         b = in->buf;
 
-        if ( ! ngx_buf_in_memory(b)) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: buf from upstream not in memory");
-            return NGX_ERROR;
+        if ( ! ngx_buf_in_memory(b) ) {
+            if ( ! ngx_buf_special(b) ) {
+                ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                    "rds_json: process field: buf from "
+                    "upstream not in memory");
+                return NGX_ERROR;
+            }
+
+            in = in->next;
+
+            if (in == NULL) {
+                return NGX_OK;
+            }
+
+            b = in->buf;
         }
 
         dd("process field: buf size: %d", (int) ngx_buf_size(b));
