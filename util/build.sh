@@ -14,6 +14,8 @@ if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$
     ./configure --prefix=/opt/nginx \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root/../xss-nginx-module \
+          --add-module=$root/../ndk-nginx-module \
+          --add-module=$root/../set-misc-nginx-module \
           --add-module=$root $opts \
           --add-module=$root/../drizzle-nginx-module \
           --with-rtsig_module

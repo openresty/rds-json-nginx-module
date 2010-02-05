@@ -60,10 +60,16 @@ order by created asc";
     }
 
     location = '/=/view/RecentComments/~/~' {
-        if ($arg_offset !~ '^\d+$') {
+        set $offset $arg_offset;
+        set_if_empty $offset 0;
+
+        set $limit $arg_limit;
+        set_if_empty $limit 10;
+
+        if ($offset !~ '^\d+$') {
             rds_json_ret 400 'Bad "offset" argument';
         }
-        if ($arg_limit !~ '^\d{1,2}$') {
+        if ($limit !~ '^\d{1,2}$') {
             rds_json_ret 400 'Bad "limit" argument';
         }
 
@@ -72,16 +78,22 @@ order by created asc";
 from posts, comments
 where post = posts.id
 order by comments.id desc
-limit $arg_offset, $arg_limit";
+limit $offset, $limit";
 
         drizzle_pass backend;
     }
 
     location = '/=/view/RecentPosts/~/~' {
-        if ($arg_offset !~ '^\d+$') {
+        set $offset $arg_offset;
+        set_if_empty $offset 0;
+
+        set $limit $arg_limit;
+        set_if_empty $limit 10;
+
+        if ($offset !~ '^\d+$') {
             rds_json_ret 400 'Bad "offset" argument';
         }
-        if ($arg_limit !~ '^\d{1,2}$') {
+        if ($limit !~ '^\d{1,2}$') {
             rds_json_ret 400 'Bad "limit" argument';
         }
 
@@ -89,7 +101,7 @@ limit $arg_offset, $arg_limit";
 "select id, title
 from posts
 order by id desc
-limit $arg_offset, $arg_limit";
+limit $offset, $limit";
 
         drizzle_pass backend;
     }
@@ -129,10 +141,16 @@ limit $arg_offset, $arg_limit";
     }
 
     location = '/=/view/PostCountByMonths/~/~' {
-        if ($arg_offset !~ '^\d+$') {
+        set $offset $arg_offset;
+        set_if_empty $offset 0;
+
+        set $limit $arg_limit;
+        set_if_empty $limit 10;
+
+        if ($offset !~ '^\d+$') {
             rds_json_ret 400 'Bad "offset" argument';
         }
-        if ($arg_limit !~ '^\d{1,2}$') {
+        if ($limit !~ '^\d{1,2}$') {
             rds_json_ret 400 'Bad "limit" argument';
         }
 
@@ -141,11 +159,14 @@ limit $arg_offset, $arg_limit";
 from posts
 group by `year_month`
 order by `year_month` desc
-limit $arg_offset, $arg_limit";
+limit $offset, $limit";
         drizzle_pass backend;
     }
 
     location = '/=/view/FullPostsByMonth/~/~' {
+        set $count $arg_count;
+        set_if_empty $count 40;
+
         if ($arg_year !~ '^(?:19|20)\d{2}$') {
             rds_json_ret 400 'Bad "year" argument';
         }
@@ -160,7 +181,7 @@ limit $arg_offset, $arg_limit";
 "select * from posts
 where year(created) = $arg_year and month(created) = $arg_month
 order by id desc
-limit $arg_count";
+limit $count";
 
         drizzle_pass backend;
     }
@@ -396,5 +417,18 @@ GET /=/model/Post/~/~?_limit=5&_order_by=id%3Adesc&_offset=100
 --- response_headers
 Content-Type: application/json
 --- response_body_like: 测试
+--- error_code: 200
+
+
+
+=== TEST 11: default arguments
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/view/RecentComments/~/~
+--- response_headers
+Content-Type: application/json
+--- response_body chop
+[{"id":179,"post":101,"sender":"agentzh","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":178,"post":101,"sender":"Winter","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":177,"post":100,"sender":"Mountain","title":"漂在北京"},{"id":176,"post":106,"sender":"agentzh","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":175,"post":106,"sender":"gosber","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":174,"post":105,"sender":"cnangel","title":"SSH::Batch: Treating clusters as maths sets and intervals"},{"id":173,"post":106,"sender":"cnangel","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":172,"post":104,"sender":"agentzh","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"},{"id":171,"post":104,"sender":"kindy","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"},{"id":170,"post":104,"sender":"cnangel","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"}]
 --- error_code: 200
 
