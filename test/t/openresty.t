@@ -3,8 +3,8 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(100);
-#repeat_each(1);
+#repeat_each(100);
+repeat_each(1);
 
 worker_connections(2048);
 workers(1);
@@ -285,6 +285,64 @@ limit $arg__offset, $arg__limit";
 
         drizzle_pass backend;
     }
+
+    location = '/=/batch/NewComment/~/~' {
+        default_type 'application/json';
+
+        set_unescape_uri $sender $arg_sender;
+
+        set_unescape_uri $email $arg_email;
+
+        set_unescape_uri $url $arg_url;
+
+        set_unescape_uri $body $arg_body;
+
+        set_unescape_uri $post_id $arg_post_id;
+
+        if ($sender !~ '\S') {
+            rds_json_ret 400 "Bad \"sender\" argument";
+        }
+        if ($email !~ '^[-A-Za-z0-9_.]+@[-A-Za-z0-9_.]+$') {
+            rds_json_ret 400 "Bad \"email\" argument";
+        }
+        if ($url !~ '^(?:\s*|https?://\S+)$') {
+            rds_json_ret 400 "Bad \"url\" argument: $url";
+        }
+        if ($body ~ '^\s*$') {
+            rds_json_ret 400 "Bad \"body\" argument";
+        }
+        if ($post_id !~ '^[1-9]\d*$') {
+            rds_json_ret 400 "Bad \"post_id\" argument";
+        }
+
+        set_quote_sql_str $sender;
+        set_quote_sql_str $email;
+        set_quote_sql_str $url;
+        set_quote_sql_str $body;
+
+        # XXX these operations should be put into a
+        # single transaction
+        echo '[';
+
+        echo_location '/=/action/RunSQL/~/~'
+"insert into comments (sender, email, url, body, post)
+values($sender, $email, $url, $body, $post_id)";
+
+        echo ',';
+
+        echo_location '/=/action/RunSQL/~/~'
+"update posts
+set comments = comments + 1
+where id = $post_id";
+
+        echo ']';
+    }
+
+    location = '/=/action/RunSQL/~/~' {
+        internal;
+        drizzle_query $query_string;
+        drizzle_pass backend;
+    }
 _EOC_
 
 no_long_string();
@@ -430,5 +488,44 @@ GET /=/view/RecentComments/~/~
 Content-Type: application/json
 --- response_body chop
 [{"id":179,"post":101,"sender":"agentzh","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":178,"post":101,"sender":"Winter","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":177,"post":100,"sender":"Mountain","title":"漂在北京"},{"id":176,"post":106,"sender":"agentzh","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":175,"post":106,"sender":"gosber","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":174,"post":105,"sender":"cnangel","title":"SSH::Batch: Treating clusters as maths sets and intervals"},{"id":173,"post":106,"sender":"cnangel","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":172,"post":104,"sender":"agentzh","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"},{"id":171,"post":104,"sender":"kindy","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"},{"id":170,"post":104,"sender":"cnangel","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"}]
+--- error_code: 200
+
+
+
+=== TEST 12: post a comment with empty body
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/batch/NewComment/~/~?sender=agentzh&email=agentzh@gmail.com&body=&post_id=3
+--- response_headers
+Content-Type: application/json
+--- response_body chop
+{"errcode":400,"errstr":"Bad \"body\" argument"}
+--- error_code: 200
+
+
+
+=== TEST 13: post a comment with valid gmail
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/batch/NewComment/~/~?sender=agentzh&email=agentzh%40gmail.com&body=hi&post_id=
+--- response_headers
+Content-Type: application/json
+--- response_body chop
+{"errcode":400,"errstr":"Bad \"post_id\" argument"}
+--- error_code: 200
+
+
+
+=== TEST 14: try to run the internal location
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /=/action/RunSQL/~/~?select
+--- response_headers
+Content-Type: application/json
+--- response_body chop
+{"errcode":404,"errstr":"Not Found"}
 --- error_code: 200
 

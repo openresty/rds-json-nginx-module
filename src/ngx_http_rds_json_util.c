@@ -129,7 +129,8 @@ ngx_http_rds_json_test_content_type(ngx_http_request_t *r)
 
 
 void
-ngx_http_rds_json_discard_bufs(ngx_pool_t *pool, ngx_chain_t *in) {
+ngx_http_rds_json_discard_bufs(ngx_pool_t *pool, ngx_chain_t *in)
+{
     ngx_chain_t         *cl;
 
     for (cl = in->next; cl; cl = cl->next) {
