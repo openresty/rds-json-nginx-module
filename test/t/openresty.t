@@ -3,8 +3,8 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(100);
-#repeat_each(1);
+#repeat_each(100);
+repeat_each(1);
 
 worker_connections(2048);
 workers(1);
@@ -27,14 +27,13 @@ our $config = <<'_EOC_';
     rds_json on;
 
    location = /auth {
-        internal;
+        #internal;
         default_type 'application/json';
 
         #internal;
         eval_subrequest_in_memory off;
         eval $res {
-            set $user agentzh;
-            set_quote_sql_str $user;
+            set_quote_sql_str $user $arg_user;
             set $sql 'select count(*) res from users where name=$user';
             drizzle_query $sql;
             drizzle_pass backend;
@@ -561,22 +560,37 @@ Content-Type: application/json
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
-GET /auth
+GET /auth?user=agentzh
+--- response_headers
+Content-Type: application/json
+--- response_body
+pass
+--- error_code: 200
+
+
+
+=== TEST 16: auth
+--- http_config eval: $::http_config
+--- config eval: $::config
+--- request
+GET /auth?user=john
 --- response_headers
 Content-Type: application/json
 --- response_body chop
+{"errcode":403,"errstr":"Forbidden"}
 --- error_code: 200
---- SKIP
 
 
-=== TEST 15: auth
+
+=== TEST 17: auth
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
 GET /test
 --- response_headers
 Content-Type: application/json
---- response_body chop
+--- response_body
+pass
 --- error_code: 200
 --- SKIP
 
