@@ -12,14 +12,16 @@ tar -xzvf nginx-$version.tar.gz
 cd nginx-$version/
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
     ./configure --prefix=/opt/nginx \
+          --add-module=$root/../eval-nginx-module \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root/../xss-nginx-module \
           --add-module=$root/../ndk-nginx-module \
           --add-module=$root/../set-misc-nginx-module \
           --add-module=$root $opts \
-          --add-module=$root/../drizzle-nginx-module \
-          --with-rtsig_module
+          --add-module=$root/../drizzle-nginx-module
+          #--add-module=$home/work/ngx_http_auth_request-0.1 #\
           #--with-debug
+          #--with-rtsig_module
           #--with-cc-opt="-g3 -O0"
           #--add-module=$root/../echo-nginx-module \
   #--without-http_ssi_module  # we cannot disable ssi because echo_location_async depends on it (i dunno why?!)
