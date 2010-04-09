@@ -133,7 +133,7 @@ ngx_http_rds_json_discard_bufs(ngx_pool_t *pool, ngx_chain_t *in)
 {
     ngx_chain_t         *cl;
 
-    for (cl = in->next; cl; cl = cl->next) {
+    for (cl = in; cl; cl = cl->next) {
         if (cl->buf->temporary && cl->buf->memory
                 && ngx_buf_size(cl->buf) > 0) {
             ngx_pfree(pool, cl->buf->start);
