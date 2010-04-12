@@ -178,8 +178,8 @@ X-Resty-DBD-Module:
 Content-Type: text/html
 --- request
 GET /mysql
---- error_code: 502
---- response_body_like: 502 Bad Gateway
+--- error_code: 500
+--- response_body_like: 500 Internal Server Error
 
 
 

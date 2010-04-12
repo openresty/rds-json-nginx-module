@@ -6,7 +6,7 @@ use Test::Nginx::Socket;
 #repeat_each(100);
 repeat_each(1);
 
-worker_connections(2048);
+#worker_connections(2048);
 workers(1);
 #master_on;
 log_level('warn');
