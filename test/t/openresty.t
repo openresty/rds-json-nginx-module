@@ -45,9 +45,11 @@ our $config = <<'_EOC_';
         #echo $res;
         if ($res ~ '"res":1') {
             echo pass;
+            break;
         }
         if ($res !~ '"res":1') {
             return 403;
+            break;
         }
     }
 
@@ -570,6 +572,19 @@ pass
 
 
 === TEST 16: auth
+
+init db:
+
+create table users (
+    id serial primary key,
+    name text not null,
+    password text not null
+);
+
+insert into users
+    (name, password)
+    values ('agentzh', 'some_pass');
+
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
@@ -583,6 +598,20 @@ Content-Type: application/json
 
 
 === TEST 17: auth
+
+db init:
+
+create table users (
+    id serial primary key,
+    name text not null,
+    password text not null
+);
+
+insert into users
+    (name, password)
+    values ('agentzh', 'some_pass');
+
+
 --- http_config eval: $::http_config
 --- config eval: $::config
 --- request
