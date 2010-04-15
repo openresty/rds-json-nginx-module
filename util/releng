@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./update-readme
+#./update-readme
 ack '(?<=\#define)\s*DDEBUG\s*1' src
 echo ====================================================
 ack '(?<=_version_string) "\d+\.\d+\.\d+"' src
