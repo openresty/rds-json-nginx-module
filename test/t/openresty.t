@@ -3,8 +3,8 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-#repeat_each(100);
-repeat_each(1);
+repeat_each(100);
+#repeat_each(1);
 
 #worker_connections(2048);
 workers(1);

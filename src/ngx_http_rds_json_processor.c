@@ -286,15 +286,24 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
         total = *(uint32_t *) b->pos;
         b->pos += sizeof(uint32_t);
 
-        len = (uint32_t) (b->last - b->pos);
+        if (total == (uint32_t) -1) {
+            /* SQL NULL found */
+            total = 0;
+            len = 0;
+            ctx->field_data_rest = 0;
 
-        if (len >= total) {
-            len = total;
+            rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len, 1 /* is null */);
+        } else {
+            len = (uint32_t) (b->last - b->pos);
+
+            if (len >= total) {
+                len = total;
+            }
+
+            ctx->field_data_rest = total - len;
+
+            rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len, 0 /* not null */);
         }
-
-        ctx->field_data_rest = total - len;
-
-        rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len);
 
         if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
             return rc;

@@ -179,7 +179,8 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
 ngx_int_t
 ngx_http_rds_json_output_field(ngx_http_request_t *r,
-        ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len)
+        ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len,
+        ngx_flag_t is_null)
 {
     ngx_http_rds_column_t               *col;
     ngx_flag_t                           bool_val = 0;
@@ -237,10 +238,14 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    if (len == 0) {
-        dd("NULL value found");
-
+    if (is_null) {
         size += sizeof("null") - 1;
+
+    } else if (len == 0) {
+        dd("empty string value found");
+
+        size += sizeof("\"\"") - 1;
+
     } else {
         switch (col->std_type & 0xc000) {
         case rds_rough_col_type_float:
@@ -359,10 +364,13 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
     *b->last++ = '"'; *b->last++ = ':';
 
-    if (len == 0) {
-        dd("copy null over");
+    if (is_null) {
+        dd("copy null value over");
         b->last = ngx_copy_const_str(b->last, "null");
 
+    } else if (len == 0) {
+        dd("copy emtpy string over");
+        b->last = ngx_copy_const_str(b->last, "\"\"");
     } else {
         switch (col->std_type & 0xc000) {
         case rds_rough_col_type_int:

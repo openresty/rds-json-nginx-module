@@ -3,7 +3,7 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(1);
+repeat_each(10);
 
 plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 
@@ -422,4 +422,39 @@ GET /test
 {"errcode":0}
 {"errcode":0,"insert_id":1,"affected_rows":1}
 [{"id":1,"body":"a\r\nb\b你好\u001a"}]
+
+
+=== TEST 13: null values
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:3306 dbname=test
+             password=some_pass user=monty protocol=mysql;
+    }
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, name char(10), age integer);";
+        echo;
+        echo_location /mysql "insert into foo (name, age) values ('', null);";
+        echo;
+        echo_location /mysql "insert into foo (name, age) values (null, 0);";
+        echo;
+        echo_location /mysql "select * from foo order by id";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+{"errcode":0,"insert_id":2,"affected_rows":1}
+[{"id":1,"name":"","age":null},{"id":2,"name":null,"age":0}]
 
