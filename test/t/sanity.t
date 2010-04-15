@@ -424,7 +424,8 @@ GET /test
 [{"id":1,"body":"a\r\nb\b你好\u001a"}]
 
 
-=== TEST 13: null values
+
+=== TEST 14: null values
 --- http_config
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test

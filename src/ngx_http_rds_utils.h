@@ -190,7 +190,7 @@ ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
     ngx_memcpy(col->name.data, b->pos, col->name.len);
     b->pos += col->name.len;
 
-    dd("saved column name \"%.*s\" (len %d, offset %d)", col->name.len, col->name.data,
+    dd("saved column name \"%.*s\" (len %d, offset %d)", (int) col->name.len, col->name.data,
             (int) col->name.len, (int) (b->pos - b->start));
 
     return NGX_OK;
