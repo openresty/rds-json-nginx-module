@@ -100,7 +100,7 @@ $rds = uri_escape($rds);
 
 
 
-=== TEST 3: rds in a single buf (non-empty result set)
+=== TEST 3: rds in a single buf (non-empty result set, and each row in a single buf)
 --- config
 location = /single {
     default_type 'application/x-resty-dbd-stream';
