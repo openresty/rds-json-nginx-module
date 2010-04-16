@@ -118,10 +118,14 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
      * {"errcode":403,"error":"Permission denied"}
      * for HTTP error pages? */
     if (r->headers_out.status != NGX_HTTP_OK) {
-        dd("status is not OK: %d, skipping", r->headers_out.status);
+        ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
+
+        dd("status is not OK: %d, skipping", (int) r->headers_out.status);
 
         return ngx_http_rds_json_next_header_filter(r);
     }
+
+    /* r->headers_out.status = 0; */
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
@@ -146,6 +150,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     ctx->state = state_expect_header;
 
+    ctx->header_sent = 0;
+
     /* set by ngx_pcalloc
      *      ctx->busy_bufs = NULL
      *      ctx->free_bufs = NULL
@@ -163,9 +169,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     r->filter_need_in_memory = 1;
 
-    /* TODO: only send the header when we actually
-     * see the RDS header */
-    return ngx_http_rds_json_next_header_filter(r);
+    /* we do postpone the header sending to the body filter */
+    return NGX_OK;
 }
 
 
@@ -210,6 +215,16 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                        "rds_json: invalid internal state: %d",
                        ctx->state);
+
+        if (! ctx->header_sent) {
+            ctx->header_sent = 1;
+
+            r->headers_out.status = NGX_HTTP_INTERNAL_SERVER_ERROR;
+            ngx_http_send_header(r);
+            ngx_http_send_special(r, NGX_HTTP_LAST);
+
+            return NGX_ERROR;
+        }
 
         return NGX_ERROR;
     }

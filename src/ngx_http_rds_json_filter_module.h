@@ -69,6 +69,8 @@ typedef struct {
 
     uint32_t                             field_data_rest;
 
+    ngx_flag_t                           header_sent;
+
 } ngx_http_rds_json_ctx_t;
 
 

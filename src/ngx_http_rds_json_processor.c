@@ -34,7 +34,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                 "rds_json: process header: buf from "
                 "upstream not in memory");
-            return NGX_ERROR;
+            goto invalid;
         }
 
         in = in->next;
@@ -49,7 +49,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
     rc = ngx_http_rds_parse_header(r, b, &header);
 
     if (rc != NGX_OK) {
-        return NGX_ERROR;
+        goto invalid;
     }
 
     if (header.col_count == 0) {
@@ -59,10 +59,21 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                     "rds_json: header: there's unexpected remaining data in the buf");
-            return NGX_ERROR;
+            goto invalid;
         }
 
         ctx->state = state_done;
+
+        /* now we send the postponed response header */
+        if (! ctx->header_sent) {
+            ctx->header_sent = 1;
+
+            rc = ngx_http_rds_json_next_header_filter(r);
+
+            if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+                return rc;
+            }
+        }
 
         rc = ngx_http_rds_json_output_header(r, ctx, &header);
 
@@ -79,15 +90,36 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
             header.col_count * sizeof(ngx_http_rds_column_t));
 
     if (ctx->cols == NULL) {
-        return NGX_ERROR;
+        goto invalid;
     }
 
     ctx->state = state_expect_col;
     ctx->cur_col = 0;
     ctx->col_count = header.col_count;
 
+    /* now we send the postponed response header */
+    rc = ngx_http_rds_json_next_header_filter(r);
+    if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        return rc;
+    }
+
     return ngx_http_rds_json_process_col(r,
             b->pos == b->last ? in->next : in, ctx);
+
+invalid:
+
+    dd("return 500");
+    if (! ctx->header_sent) {
+        ctx->header_sent = 1;
+
+        r->headers_out.status = NGX_HTTP_INTERNAL_SERVER_ERROR;
+        ngx_http_send_header(r);
+        ngx_http_send_special(r, NGX_HTTP_LAST);
+
+        return NGX_ERROR;
+    }
+
+    return NGX_ERROR;
 }
 
 
