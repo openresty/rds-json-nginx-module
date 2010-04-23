@@ -39,12 +39,12 @@ Description
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/>), for
-    example, the version 0.8.30 (see nginx compatibility), and then build
+    example, the version 0.8.36 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://sysoev.ru/nginx/nginx-0.8.30.tar.gz'
-        $ tar -xzvf nginx-0.8.30.tar.gz
-        $ cd nginx-0.8.30/
+        $ wget 'http://sysoev.ru/nginx/nginx-0.8.36.tar.gz'
+        $ tar -xzvf nginx-0.8.36.tar.gz
+        $ cd nginx-0.8.36/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         $ ./configure --prefix=/opt/nginx \
@@ -61,7 +61,7 @@ Installation
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   0.8.x (last tested version is 0.8.33)
+    *   0.8.x (last tested version is 0.8.36)
 
     *   0.7.x >= 0.7.46 (last tested version is 0.7.65)
 
