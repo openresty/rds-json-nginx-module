@@ -276,7 +276,9 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
         case rds_rough_col_type_bool:
             dd("bool field found");
 
-            if (*data == '0' || *data == '1') {
+            if (*data == '0' || *data == 'f' || *data == 'F'
+                    || *data == '1' || *data == 't' || *data == 'T' )
+            {
                 if (len != 1 || ctx->field_data_rest) {
                     ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                             "rds_json: invalid boolean field value leading "
@@ -284,18 +286,13 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
                     return NGX_ERROR;
                 }
 
-                if (*data == '0') {
+                if (*data == '0' || *data == 'f' || *data == 'F') {
                     bool_val = 0;
                     size += sizeof("false") - 1;
                 } else {
                     bool_val = 1;
                     size += sizeof("true") - 1;
                 }
-
-            } else if (*data == 't' || *data == 'T') {
-                bool_val = 1;
-            } else if (*data == 'f' || *data == 'F') {
-                bool_val = 0;
             } else {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                         "rds_json: output field: invalid boolean value "
@@ -377,7 +374,7 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
         case rds_rough_col_type_float:
             b->last = ngx_copy(b->last, data, len);
 
-            dd("copy over int/float value: %.*s", len, data);
+            dd("copy over int/float value: %.*s", (int) len, data);
 
             break;
 
@@ -407,10 +404,10 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
                         data, len);
 
                 dd("escaped value \"%.*s\" (len %d, escape %d, escape2 %d)",
-                        len + val_escape,
-                        p, (int) len + val_escape,
+                        (int) (len + val_escape),
+                        p, (int) (len + val_escape),
                         (int) val_escape,
-                        (int) (b->last - p) - len);
+                        (int) ((b->last - p) - len));
             }
 
             if (ctx->field_data_rest == 0) {
@@ -544,10 +541,10 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
                     data, len);
 
             dd("escaped value \"%.*s\" (len %d, escape %d, escape2 %d)",
-                    len + escape,
-                    p, (int) len + escape,
+                    (int) (len + escape),
+                    p, (int) (len + escape),
                     (int) escape,
-                    (int) (b->last - p) - len);
+                    (int) ((b->last - p) - len));
 
         }
 

@@ -17,8 +17,11 @@ if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$
           --add-module=$root/../xss-nginx-module \
           --add-module=$root/../ndk-nginx-module \
           --add-module=$root/../set-misc-nginx-module \
+          --add-module=$root/../array-var-nginx-module \
           --add-module=$root $opts \
+          --add-module=$root/../lua-nginx-module \
           --add-module=$root/../drizzle-nginx-module \
+          --add-module=$root/../postgres-nginx-module \
           --with-debug
           #--add-module=$home/work/ngx_http_auth_request-0.1 #\
           #--with-rtsig_module
