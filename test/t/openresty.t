@@ -3,12 +3,12 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(2);
+repeat_each(100);
 #repeat_each(1);
 
-#worker_connections(2048);
+worker_connections(1024);
 workers(1);
-#master_on;
+master_on;
 log_level('warn');
 
 plan tests => repeat_each() * 3 * blocks();
@@ -17,7 +17,7 @@ our $http_config = <<'_EOC_';
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test
              password=some_pass user=monty protocol=mysql;
-        drizzle_keepalive max=400 overflow=ignore;
+        drizzle_keepalive max=400 overflow=reject;
     }
 _EOC_
 

@@ -28,7 +28,7 @@ ngx_http_rds_json_output_literal(ngx_http_request_t *r,
 
     b = cl->buf;
     b->tag = ctx->tag;
-    b->flush = 1;
+    b->flush = 0;
     b->memory = 1;
     b->temporary = 0;
 
@@ -84,7 +84,7 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
     b = cl->buf;
     b->tag = ctx->tag;
-    b->flush = 1;
+    b->flush = 0;
     b->memory = 1;
     b->temporary = 1;
 
@@ -203,7 +203,7 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
     b = cl->buf;
     b->tag = ctx->tag;
-    b->flush = 1;
+    b->flush = 0;
     b->memory = 1;
     b->temporary = 1;
 
@@ -455,7 +455,7 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
 
     b = cl->buf;
     b->tag = ctx->tag;
-    b->flush = 1;
+    b->flush = 0;
     b->memory = 1;
     b->temporary = 1;
 
