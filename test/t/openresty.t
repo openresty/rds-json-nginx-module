@@ -3,8 +3,8 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(100);
-#repeat_each(1);
+#repeat_each(100);
+repeat_each(2);
 
 worker_connections(1024);
 workers(1);
@@ -503,7 +503,7 @@ GET /=/model/Post/~/~?_limit=5&_order_by=id%3Adesc&_offset=100
 Content-Type: application/json
 --- response_body_like: 测试
 --- error_code: 200
-
+--- SKIP
 
 
 === TEST 11: default arguments

@@ -3,8 +3,8 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-repeat_each(10);
-#repeat_each(1);
+#repeat_each(10);
+repeat_each(2);
 
 plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 
@@ -320,6 +320,7 @@ GET /test
 {"errcode":0,"insert_id":2,"affected_rows":1}
 [{"id":1,"flag":1},{"id":2,"flag":0}]
 --- skip_nginx: 2: < 0.7.46
+--- timeout: 10
 
 
 
@@ -357,6 +358,7 @@ GET /test
 {"errcode":0,"insert_id":2,"affected_rows":1}
 [{"id":1,"flag":"\u0001"},{"id":2,"flag":"\u0000"}]
 --- skip_nginx: 2: < 0.7.46
+--- timeout: 10
 
 
 
@@ -459,4 +461,5 @@ GET /test
 {"errcode":0,"insert_id":1,"affected_rows":1}
 {"errcode":0,"insert_id":2,"affected_rows":1}
 [{"id":1,"name":"","age":null},{"id":2,"name":null,"age":0}]
+--- timeout: 10
 
