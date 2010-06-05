@@ -24,6 +24,7 @@ insert into cats (id, name) values (3, 'bob');
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test
              password=some_pass user=monty protocol=mysql;
+         #drizzle_keepalive max=1;
     }
 --- config
     location /mysql {
