@@ -42,10 +42,10 @@ __DATA__
 --- request
 GET /test
 --- response_body
-{"errcode":1}
-{"errcode":1}
-{"errcode":1,"affected_rows":1}
-{"errcode":1,"affected_rows":1}
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"affected_rows":1}
+{"errcode":0,"affected_rows":1}
 [{"id":1,"flag":true},{"id":2,"flag":false}]
 --- skip_nginx: 2: < 0.7.46
 
@@ -78,10 +78,10 @@ GET /test
 --- request
 GET /test
 --- response_body
-{"errcode":1}
-{"errcode":1}
-{"errcode":1,"affected_rows":1}
-{"errcode":1,"affected_rows":1}
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"affected_rows":1}
+{"errcode":0,"affected_rows":1}
 [{"id":1,"flag":true},{"id":2,"flag":false}]
 --- skip_nginx: 2: < 0.7.46
 
