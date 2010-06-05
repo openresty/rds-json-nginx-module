@@ -58,6 +58,7 @@ GET /test
 --- skip_nginx: 2: < 0.7.46
 
 
+
 === TEST 2: asynchronous (without echo filter)
 --- http_config
     upstream pgsql {
@@ -98,6 +99,7 @@ GET /test
 <script type="text/javascript">loader.load([{"id":3,"name":"bob"},{"id":2,"name":null}])</script>
 </html>
 --- skip_nginx: 2: < 0.7.46
+
 
 
 === TEST 3: asynchronous (with echo filter)
