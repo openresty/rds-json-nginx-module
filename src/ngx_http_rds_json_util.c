@@ -141,7 +141,7 @@ ngx_http_rds_json_discard_bufs(ngx_pool_t *pool, ngx_chain_t *in)
         }
 #endif
 
-        cl->buf->pos = cl->buf->last;
+        cl->buf->last = cl->buf->pos;
     }
 }
 

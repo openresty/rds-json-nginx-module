@@ -159,6 +159,9 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
      *      ctx->out       = NULL
      *      ctx->busy_bufs = NULL
      *      ctx->free_bufs = NULL
+     *      ctx->cached = (ngx_buf_t) 0
+     *      ctx->postponed = (ngx_buf_t) 0
+     *      ctx->avail_out = 0
      *      ctx->col_names = NULL
      *      ctx->col_count = 0
      *      ctx->cur_col = 0
@@ -193,9 +196,6 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     if (ctx == NULL) {
         return ngx_http_rds_json_next_body_filter(r, in);
     }
-
-    ctx->out = NULL;
-    ctx->last_out = &ctx->out;
 
     switch (ctx->state) {
     case state_expect_header:
@@ -297,6 +297,9 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
 
     conf->enabled = NGX_CONF_UNSET;
     conf->format = NGX_CONF_UNSET_UINT;
+
+    /* TODO we should make this configurable */
+    conf->buf_size = ngx_pagesize;
 
     return conf;
 }

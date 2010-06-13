@@ -35,6 +35,7 @@ typedef struct {
     ngx_str_t                        errcode;
     ngx_http_complex_value_t        *errstr;
 
+    size_t                           buf_size;
 } ngx_http_rds_json_conf_t;
 
 
@@ -68,6 +69,12 @@ typedef struct {
     ngx_chain_t                        **last_out;
     ngx_chain_t                         *busy_bufs;
     ngx_chain_t                         *free_bufs;
+
+    ngx_buf_t                           *out_buf;
+    ngx_buf_t                            cached;
+    ngx_buf_t                            postponed;
+
+    size_t                               avail_out;
 
     uint32_t                             field_data_rest;
 

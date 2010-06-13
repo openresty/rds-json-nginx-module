@@ -10,7 +10,7 @@ repeat_each(1);
 
 plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 
-no_long_string();
+#no_long_string();
 
 run_tests();
 
