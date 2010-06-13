@@ -4,7 +4,7 @@
  */
 
 
-#define DDEBUG 0
+#define DDEBUG 1
 #include "ddebug.h"
 
 #include "ngx_http_rds_json_filter_module.h"
@@ -42,25 +42,36 @@ ngx_http_rds_json_output_literal(ngx_http_request_t *r,
         b->last_buf = 1;
     }
 
-    return ngx_http_rds_json_output_chain(r, ctx, cl);
+    *ctx->last_out = cl;
+    ctx->last_out = &cl->next;
+
+    return NGX_OK;
 }
 
 
 ngx_int_t
-ngx_http_rds_json_output_chain(ngx_http_request_t *r,
-        ngx_http_rds_json_ctx_t *ctx, ngx_chain_t *in)
+ngx_http_rds_json_output_bufs(ngx_http_request_t *r,
+        ngx_http_rds_json_ctx_t *ctx)
 {
-    ngx_int_t               rc;
+    ngx_int_t                rc;
 
     dd("entered output chain");
 
-    rc = ngx_http_rds_json_next_body_filter(r, in);
+    if (ctx->out == NULL) {
+        return NGX_OK;
+    }
+
+    dd_dump_chain_size();
+
+    rc = ngx_http_rds_json_next_body_filter(r, ctx->out);
 
     if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         return rc;
     }
 
-    ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &in, ctx->tag);
+    ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out, ctx->tag);
+
+    ctx->last_out = &ctx->out;
 
     dd("after update chain");
 
@@ -173,7 +184,10 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
         b->last_buf = 1;
     }
 
-    return ngx_http_rds_json_output_chain(r, ctx, cl);
+    *ctx->last_out = cl;
+    ctx->last_out = &cl->next;
+
+    return NGX_OK;
 }
 
 
@@ -432,7 +446,10 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    return ngx_http_rds_json_output_chain(r, ctx, cl);
+    *ctx->last_out = cl;
+    ctx->last_out = &cl->next;
+
+    return NGX_OK;
 }
 
 
@@ -569,6 +586,9 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    return ngx_http_rds_json_output_chain(r, ctx, cl);
+    *ctx->last_out = cl;
+    ctx->last_out = &cl->next;
+
+    return NGX_OK;
 }
 

@@ -64,6 +64,8 @@ typedef struct {
 
     ngx_buf_tag_t                        tag;
 
+    ngx_chain_t                         *out;
+    ngx_chain_t                        **last_out;
     ngx_chain_t                         *busy_bufs;
     ngx_chain_t                         *free_bufs;
 

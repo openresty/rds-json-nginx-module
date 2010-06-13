@@ -11,6 +11,7 @@
 #include "ngx_http_rds_json_util.h"
 #include "ngx_http_rds_json_processor.h"
 #include "ngx_http_rds_json_handler.h"
+#include "ngx_http_rds_json_output.h"
 
 #include <ngx_config.h>
 
@@ -152,7 +153,10 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     ctx->header_sent = 0;
 
+    ctx->last_out = &ctx->out;
+
     /* set by ngx_pcalloc
+     *      ctx->out       = NULL
      *      ctx->busy_bufs = NULL
      *      ctx->free_bufs = NULL
      *      ctx->col_names = NULL
@@ -177,7 +181,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
-    ngx_http_rds_json_ctx_t   *ctx;
+    ngx_http_rds_json_ctx_t    *ctx;
+    ngx_int_t                   rc;
 
     if (in == NULL || r->header_only) {
         return ngx_http_rds_json_next_body_filter(r, in);
@@ -189,17 +194,29 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return ngx_http_rds_json_next_body_filter(r, in);
     }
 
+    ctx->out = NULL;
+    ctx->last_out = &ctx->out;
+
     switch (ctx->state) {
     case state_expect_header:
-        return ngx_http_rds_json_process_header(r, in, ctx);
+        rc = ngx_http_rds_json_process_header(r, in, ctx);
+        break;
+
     case state_expect_col:
-        return ngx_http_rds_json_process_col(r, in, ctx);
+        rc = ngx_http_rds_json_process_col(r, in, ctx);
+        break;
+
     case state_expect_row:
-        return ngx_http_rds_json_process_row(r, in, ctx);
+        rc = ngx_http_rds_json_process_row(r, in, ctx);
+        break;
+
     case state_expect_field:
-        return ngx_http_rds_json_process_field(r, in, ctx);
+        rc = ngx_http_rds_json_process_field(r, in, ctx);
+        break;
+
     case state_expect_more_field_data:
-        return ngx_http_rds_json_process_more_field_data(r, in, ctx);
+        rc = ngx_http_rds_json_process_more_field_data(r, in, ctx);
+        break;
 
     case state_done:
 
@@ -210,16 +227,29 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         ngx_http_rds_json_discard_bufs(r->pool, in);
 
         return NGX_OK;
-
+        break;
     default:
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                        "rds_json: invalid internal state: %d",
                        ctx->state);
 
+        rc = NGX_ERROR;
+
+        break;
+    }
+
+    dd("body filter rc: %d", (int) rc);
+
+    if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         if (! ctx->header_sent) {
             ctx->header_sent = 1;
 
-            r->headers_out.status = NGX_HTTP_INTERNAL_SERVER_ERROR;
+            if (rc == NGX_ERROR) {
+                rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
+            }
+
+            r->headers_out.status = rc;
+
             ngx_http_send_header(r);
             ngx_http_send_special(r, NGX_HTTP_LAST);
 
@@ -229,8 +259,9 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return NGX_ERROR;
     }
 
-    /* impossible to reach here */
-    return ngx_http_rds_json_next_body_filter(r, in);
+    dd("output bufs");
+
+    return ngx_http_rds_json_output_bufs(r, ctx);
 }
 
 

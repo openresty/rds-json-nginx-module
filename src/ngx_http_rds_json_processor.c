@@ -153,7 +153,11 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
         b = in->buf;
     }
 
+    dd("parsing rds column");
+
     rc = ngx_http_rds_parse_col(r, b, &ctx->cols[ctx->cur_col]);
+
+    dd("parse col returns %d (%d)", (int) rc, (int) NGX_OK);
 
     if (rc != NGX_OK) {
         return NGX_ERROR;
