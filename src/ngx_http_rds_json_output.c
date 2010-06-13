@@ -4,7 +4,7 @@
  */
 
 
-#define DDEBUG 1
+#define DDEBUG 0
 #include "ddebug.h"
 
 #include "ngx_http_rds_json_filter_module.h"
@@ -57,25 +57,29 @@ ngx_http_rds_json_output_bufs(ngx_http_request_t *r,
 
     dd("entered output chain");
 
-    if (ctx->out == NULL) {
-        return NGX_OK;
-    }
-
     dd_dump_chain_size();
 
-    rc = ngx_http_rds_json_next_body_filter(r, ctx->out);
+    for ( ;; ) {
+        if (ctx->out == NULL) {
+            /* fprintf(stderr, "\n"); */
+            return NGX_OK;
+        }
 
-    if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
-        return rc;
+        /* fprintf(stderr, "XXX Relooping..."); */
+
+        rc = ngx_http_rds_json_next_body_filter(r, ctx->out);
+
+        if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+            return rc;
+        }
+
+        ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out, ctx->tag);
+
+        ctx->last_out = &ctx->out;
     }
 
-    ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out, ctx->tag);
-
-    ctx->last_out = &ctx->out;
-
-    dd("after update chain");
-
-    return rc;
+    /* impossible to reach here */
+    return NGX_ERROR;
 }
 
 

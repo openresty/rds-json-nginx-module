@@ -1,4 +1,4 @@
-# vi:filetype=perl
+# vi:filetype=
 
 use lib 'lib';
 use Test::Nginx::Socket;
@@ -217,6 +217,7 @@ GET /test
 {"errcode":0,"affected_rows":1}
 [{"name":"marry"}]
 --- skip_nginx: 2: < 0.7.46
+--- timeout: 5
 
 
 
