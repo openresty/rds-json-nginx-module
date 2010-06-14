@@ -80,6 +80,7 @@ typedef struct {
 
     ngx_flag_t                           header_sent;
 
+    ngx_flag_t                           seen_stream_end;
 } ngx_http_rds_json_ctx_t;
 
 

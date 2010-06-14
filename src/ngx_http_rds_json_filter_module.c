@@ -241,6 +241,8 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     dd("body filter rc: %d", (int) rc);
 
     if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        ctx->state = state_done;
+
         if (! ctx->header_sent) {
             ctx->header_sent = 1;
 
@@ -300,6 +302,10 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
 
     /* TODO we should make this configurable */
     conf->buf_size = ngx_pagesize;
+
+#if 0
+    conf->buf_size = 1;
+#endif
 
     return conf;
 }

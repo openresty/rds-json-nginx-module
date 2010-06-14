@@ -44,8 +44,12 @@ ngx_http_rds_json_output_literal(ngx_http_request_t *r,
 
     dd("before output chain");
 
-    if (last_buf && r != r->main) {
-        last_buf = 0;
+    if (last_buf) {
+        ctx->seen_stream_end = 1;
+
+        if (r != r->main) {
+            last_buf = 0;
+        }
     }
 
     return ngx_http_rds_json_submit_mem(r, ctx, len, (unsigned) last_buf);
@@ -59,21 +63,24 @@ ngx_http_rds_json_output_bufs(ngx_http_request_t *r,
     ngx_int_t                rc;
     ngx_chain_t             *cl;
 
-    dd("entered output chain: %p -> %p", ctx->out_buf->pos,
-            ctx->out_buf->last);
+    dd("entered output chain");
 
-    if (ctx->out_buf->last != ctx->out_buf->pos) {
-        dd("MEM save ctx->out_buf");
+    if (ctx->seen_stream_end) {
+        ctx->seen_stream_end = 0;
 
-        cl = ngx_alloc_chain_link(r->pool);
-        if (cl == NULL) {
-            return NGX_ERROR;
+        if (ctx->avail_out) {
+            cl = ngx_alloc_chain_link(r->pool);
+            if (cl == NULL) {
+                return NGX_ERROR;
+            }
+
+            cl->buf = ctx->out_buf;
+            cl->next = NULL;
+            *ctx->last_out = cl;
+            ctx->last_out = &cl->next;
+
+            ctx->avail_out = 0;
         }
-
-        cl->buf = ctx->out_buf;
-        cl->next = NULL;
-        *ctx->last_out = cl;
-        ctx->last_out = &cl->next;
     }
 
     dd_dump_chain_size();
@@ -193,10 +200,11 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    /* XXX: make this configurable */
     if (r == r->main) {
         last_buf = 1;
     }
+
+    ctx->seen_stream_end = 1;
 
     return ngx_http_rds_json_submit_mem(r, ctx, size, (unsigned) last_buf);
 }
@@ -721,15 +729,12 @@ ngx_http_rds_json_submit_mem(ngx_http_request_t *r,
 
             if (ctx->postponed.pos == NULL) {
                 ctx->out_buf->last_buf = last_buf;
+                break;
             }
 
             rc = ngx_http_rds_json_get_buf(r, ctx);
             if (rc != NGX_OK) {
                 return NGX_ERROR;
-            }
-
-            if (ctx->postponed.pos == NULL) {
-                break;
             }
         }
 
@@ -754,11 +759,6 @@ ngx_http_rds_json_submit_mem(ngx_http_request_t *r,
         cl->next = NULL;
         *ctx->last_out = cl;
         ctx->last_out = &cl->next;
-
-        rc = ngx_http_rds_json_get_buf(r, ctx);
-        if (rc != NGX_OK) {
-            return NGX_ERROR;
-        }
     }
 
     return NGX_OK;

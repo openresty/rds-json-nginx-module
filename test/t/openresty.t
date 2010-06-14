@@ -1,4 +1,4 @@
-# vi:filetype=perl
+# vi:filetype=
 
 use lib 'lib';
 use Test::Nginx::Socket;
@@ -517,6 +517,7 @@ Content-Type: application/json
 --- response_body chop
 [{"id":179,"post":101,"sender":"agentzh","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":178,"post":101,"sender":"Winter","title":"生活搜基于 Firefox 3.1 的 List Hunter 集群"},{"id":177,"post":100,"sender":"Mountain","title":"漂在北京"},{"id":176,"post":106,"sender":"agentzh","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":175,"post":106,"sender":"gosber","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":174,"post":105,"sender":"cnangel","title":"SSH::Batch: Treating clusters as maths sets and intervals"},{"id":173,"post":106,"sender":"cnangel","title":"Text::SmartLinks: The Perl 6 love for Perl 5"},{"id":172,"post":104,"sender":"agentzh","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"},{"id":171,"post":104,"sender":"kindy","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"},{"id":170,"post":104,"sender":"cnangel","title":"My VDOM.pm & WebKit Cluster Talk at the April Meeting of Beijing Perl Workshop"}]
 --- error_code: 200
+--- timeout: 3
 
 
 
