@@ -74,6 +74,15 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
       0,
       NULL },
 
+    { ngx_string("rds_json_buffer_size"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_TAKE1,
+      ngx_conf_set_size_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_rds_json_conf_t, buf_size),
+      NULL },
+
+
       ngx_null_command
 };
 
@@ -300,8 +309,7 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
     conf->enabled = NGX_CONF_UNSET;
     conf->format = NGX_CONF_UNSET_UINT;
 
-    /* TODO we should make this configurable */
-    conf->buf_size = ngx_pagesize;
+    conf->buf_size = NGX_CONF_UNSET_SIZE;
 
 #if 0
     conf->buf_size = 1;
@@ -323,6 +331,8 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
             ngx_http_rds_json_content_type);
+
+    ngx_conf_merge_size_value(conf->buf_size, prev->buf_size, (size_t) ngx_pagesize);
 
     return NGX_CONF_OK;
 }
