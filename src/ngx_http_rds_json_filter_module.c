@@ -261,7 +261,9 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
             r->headers_out.status = rc;
 
-            ngx_http_send_header(r);
+            dd("sending ERROR headers");
+
+            ngx_http_rds_json_next_header_filter(r);
             ngx_http_send_special(r, NGX_HTTP_LAST);
 
             return NGX_ERROR;

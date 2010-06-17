@@ -98,9 +98,13 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
     ctx->col_count = header.col_count;
 
     /* now we send the postponed response header */
-    rc = ngx_http_rds_json_next_header_filter(r);
-    if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
-        return rc;
+    if (! ctx->header_sent) {
+        ctx->header_sent = 1;
+
+        rc = ngx_http_rds_json_next_header_filter(r);
+        if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+            return rc;
+        }
     }
 
     return ngx_http_rds_json_process_col(r,
@@ -165,9 +169,6 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 
     if (b->pos == b->last) {
         dd("parse col buf consumed");
-        if (b->temporary) {
-            ngx_pfree(r->pool, b->start);
-        }
         in = in->next;
     }
 
@@ -267,9 +268,6 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
     ctx->state = state_expect_field;
 
     if (b->pos == b->last) {
-        if (b->temporary) {
-            ngx_pfree(r->pool, b->start);
-        }
         in = in->next;
     } else {
         dd("process row: buf not consumed completely");
@@ -295,6 +293,8 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
         b = in->buf;
 
         if ( ! ngx_buf_in_memory(b) ) {
+            dd("buf not in memory");
+
             if ( ! ngx_buf_special(b) ) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                     "rds_json: process field: buf from "
@@ -315,11 +315,17 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
         if (b->last - b->pos < (ssize_t) sizeof(uint32_t)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                   "rds_json: field size is incomplete in the buf: %*s", b->last - b->pos, b->pos);
+                   "rds_json: field size is incomplete in the buf: %*s (len: %d)",
+                   b->last - b->pos, b->pos,
+                   (int) (b->last - b->pos));
+
             return NGX_ERROR;
         }
 
         total = *(uint32_t *) b->pos;
+
+        dd("total: %d", (int) total);
+
         b->pos += sizeof(uint32_t);
 
         if (total == (uint32_t) -1) {
@@ -348,11 +354,6 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
         b->pos += len;
 
         if (b->pos == b->last) {
-
-            if (b->temporary) {
-                ngx_pfree(r->pool, b->start);
-            }
-
             in = in->next;
         }
 
@@ -423,9 +424,6 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
         b->pos += len;
 
         if (b->pos == b->last) {
-            if (b->temporary) {
-                ngx_pfree(r->pool, b->start);
-            }
             in = in->next;
         }
 
