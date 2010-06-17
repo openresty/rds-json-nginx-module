@@ -82,7 +82,6 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
       offsetof(ngx_http_rds_json_conf_t, buf_size),
       NULL },
 
-
       ngx_null_command
 };
 
