@@ -22,7 +22,7 @@ fi
 cd nginx-$version/
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
     ./configure --prefix=/opt/nginx \
-          --with-cc-opt="-O0" \
+          --with-cc-opt="-O1" \
           --add-module=$root/../eval-nginx-module \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root/../xss-nginx-module \
