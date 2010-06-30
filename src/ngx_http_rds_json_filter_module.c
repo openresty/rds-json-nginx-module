@@ -126,7 +126,11 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
     /* XXX maybe we can generate stub JSON strings like
      * {"errcode":403,"error":"Permission denied"}
      * for HTTP error pages? */
-    if (r->headers_out.status != NGX_HTTP_OK) {
+    if ((r->headers_out.status < NGX_HTTP_OK)
+        || (r->headers_out.status >= NGX_HTTP_SPECIAL_RESPONSE)
+        || (r->headers_out.status == NGX_HTTP_NO_CONTENT)
+        || (r->headers_out.status == NGX_HTTP_RESET_CONTENT))
+    {
         ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
 
         dd("status is not OK: %d, skipping", (int) r->headers_out.status);

@@ -13,6 +13,11 @@
 #include <nginx.h>
 
 
+#ifndef NGX_HTTP_RESET_CONTENT
+#define NGX_HTTP_RESET_CONTENT 205
+#endif
+
+
 extern ngx_module_t  ngx_http_rds_json_filter_module;
 
 extern ngx_http_output_header_filter_pt  ngx_http_rds_json_next_header_filter;
