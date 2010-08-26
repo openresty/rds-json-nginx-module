@@ -8,7 +8,7 @@ repeat_each(1);
 plan tests => repeat_each() * 2 * blocks();
 
 our $http_config = <<'_EOC_';
-    upstream database {
+    upstream backend {
         postgres_server  127.0.0.1:5432 dbname=ngx_test
                          user=ngx_test password=ngx_test;
     }
