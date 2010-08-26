@@ -3,10 +3,16 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-#repeat_each(10);
 repeat_each(1);
 
 plan tests => repeat_each() * 2 * blocks();
+
+our $http_config = <<'_EOC_';
+    upstream database {
+        postgres_server  127.0.0.1:5432 dbname=ngx_test
+                         user=ngx_test password=ngx_test;
+    }
+_EOC_
 
 no_long_string();
 
@@ -15,12 +21,7 @@ run_tests();
 __DATA__
 
 === TEST 1: bool blob field (keepalive off)
---- http_config
-    upstream backend {
-        postgres_server 127.0.0.1:5432 dbname=test
-             password=some_pass user=monty;
-        postgres_keepalive off;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /pg "drop table if exists foo";
@@ -52,11 +53,7 @@ GET /test
 
 
 === TEST 2: bool blob field (keepalive on)
---- http_config
-    upstream backend {
-        postgres_server 127.0.0.1:5432 dbname=test
-             password=some_pass user=monty;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /pg "drop table if exists foo";
