@@ -14,17 +14,10 @@ no_diff();
 __DATA__
 
 === TEST 1: sanity
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
 --- http_config
     upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-         #drizzle_keepalive max=1;
+        drizzle_server 127.0.0.1:3306 protocol=mysql
+                       dbname=ngx_test user=ngx_test password=ngx_test;
     }
 --- config
     location /mysql {
