@@ -10,7 +10,7 @@ plan tests => repeat_each() * 2 * blocks();
 $ENV{TEST_NGINX_POSTGRESQL_PORT} ||= 5432;
 
 our $http_config = <<'_EOC_';
-    upstream database {
+    upstream backend {
         postgres_server  127.0.0.1:$TEST_NGINX_POSTGRESQL_PORT
                          dbname=ngx_test user=ngx_test password=ngx_test;
     }
