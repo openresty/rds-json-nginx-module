@@ -570,6 +570,7 @@ Content-Type: application/json
 --- response_body
 pass
 --- error_code: 200
+--- SKIP
 
 
 
@@ -596,6 +597,7 @@ Content-Type: application/json
 --- response_body chop
 {"errcode":403,"errstr":"Forbidden"}
 --- error_code: 200
+--- SKIP
 
 
 

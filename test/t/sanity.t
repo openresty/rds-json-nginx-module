@@ -398,7 +398,27 @@ GET /test
 
 
 
-=== TEST 13: strings need to be escaped
+=== TEST 13: TEST
+--- SKIP
+--- http_config
+    upstream backend {
+        drizzle_server 10.232.36.3:3306 dbname=dp_0001
+             password=711TJS user=lzstat protocol=mysql;
+    }
+--- config
+    location /test {
+        drizzle_query "select * from dpunit_tb_key_result__201008 limit 3";
+        drizzle_pass backend;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+[]
+
+
+
+=== TEST 14: strings need to be escaped
 --- http_config
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test
@@ -431,7 +451,7 @@ GET /test
 
 
 
-=== TEST 14: null values
+=== TEST 15: null values
 --- http_config
     upstream backend {
         drizzle_server 127.0.0.1:3306 dbname=test

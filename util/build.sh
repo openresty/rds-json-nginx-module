@@ -9,17 +9,21 @@ opts=$2
 
 cd ~/work
 
-if [[ ! -s nginx-$version.tar.gz ]]; then
-    wget "http://sysoev.ru/nginx/nginx-$version.tar.gz" -O nginx-$version.tar.gz
+if [ ! -s "nginx-$version.tar.gz" ]; then
+    wget "http://sysoev.ru/nginx/nginx-$version.tar.gz" -O nginx-$version.tar.gz || exit 1
+    tar -xzvf nginx-$version.tar.gz || exit 1
+    if [ "$version" = "0.8.41" ]; then
+        cp $root/../no-pool-nginx/nginx-$version-no_pool.patch ./
+        patch -p0 < nginx-$version-no_pool.patch || exit 1
+    fi
 fi
 
-tar -xzvf nginx-$version.tar.gz
-if [[ $? != 0 ]]; then
-    echo "Failed to untar the tar ball."
-    exit 1
-fi
+#tar -xzvf nginx-$version.tar.gz || exit 1
+#cp $root/../no-pool-nginx/nginx-0.8.41-no_pool.patch ./
+#patch -p0 < nginx-0.8.41-no_pool.patch
 
 cd nginx-$version/
+
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
     ./configure --prefix=/opt/nginx \
           --with-cc-opt="-O1" \
@@ -30,11 +34,12 @@ if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$
           --add-module=$root/../set-misc-nginx-module \
           --add-module=$root/../array-var-nginx-module \
           --add-module=$root $opts \
-          --add-module=$root/../lua-nginx-module \
           --add-module=$root/../drizzle-nginx-module \
           --add-module=$root/../form-input-nginx-module \
           --add-module=$root/../postgres-nginx-module \
-          --with-debug
+          --with-debug \
+        || exit 1
+          #--add-module=$root/../lua-nginx-module \
           #--add-module=$home/work/ngx_http_auth_request-0.1 #\
           #--with-rtsig_module
           #--with-cc-opt="-g3 -O0"
