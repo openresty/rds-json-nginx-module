@@ -3,10 +3,11 @@
 use lib 'lib';
 use Test::Nginx::Socket;
 
-#repeat_each(10);
-repeat_each(1);
+repeat_each(2);
 
 plan tests => repeat_each() * 2 * blocks();
+
+$ENV{TEST_NGINX_POSTGRESQL_PORT} ||= 5432;
 
 no_long_string();
 
@@ -17,13 +18,13 @@ __DATA__
 === TEST 1: bool blob field (keepalive off)
 --- http_config
     upstream backend {
-        postgres_server 127.0.0.1:5432 dbname=test
-             password=some_pass user=monty;
-        postgres_keepalive off;
+        postgres_server     127.0.0.1:$TEST_NGINX_POSTGRESQL_PORT
+                            dbname=ngx_test user=ngx_test password=ngx_test;
+        postgres_keepalive  off;
     }
 --- config
     location /test {
-        echo_location /pg "drop table if exists foo";
+        echo_location /pgignore "drop table foo";
         echo;
         echo_location /pg "create table foo (id serial, flag bool);";
         echo;
@@ -39,6 +40,13 @@ __DATA__
         postgres_query $query_string;
         rds_json on;
     }
+    location = /pgignore {
+        postgres_pass backend;
+        postgres_query $query_string;
+        rds_json on;
+        error_page 500 = /ignore;
+    }
+    location /ignore { echo "ignore"; }
 --- request
 GET /test
 --- response_body
@@ -54,12 +62,12 @@ GET /test
 === TEST 2: bool blob field (keepalive on)
 --- http_config
     upstream backend {
-        postgres_server 127.0.0.1:5432 dbname=test
-             password=some_pass user=monty;
+        postgres_server     127.0.0.1:$TEST_NGINX_POSTGRESQL_PORT
+                            dbname=ngx_test user=ngx_test password=ngx_test;
     }
 --- config
     location /test {
-        echo_location /pg "drop table if exists foo";
+        echo_location /pgignore "drop table foo";
         echo;
         echo_location /pg "create table foo (id serial, flag bool);";
         echo;
@@ -75,6 +83,13 @@ GET /test
         postgres_query $query_string;
         rds_json on;
     }
+    location = /pgignore {
+        postgres_pass backend;
+        postgres_query $query_string;
+        rds_json on;
+        error_page 500 = /ignore;
+    }
+    location /ignore { echo "ignore"; }
 --- request
 GET /test
 --- response_body

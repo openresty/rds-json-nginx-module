@@ -7,6 +7,15 @@ repeat_each(2);
 
 plan tests => repeat_each() * 2 * blocks();
 
+$ENV{TEST_NGINX_MYSQL_PORT} ||= 3306;
+
+our $http_config = <<'_EOC_';
+    upstream backend {
+        drizzle_server 127.0.0.1:$TEST_NGINX_MYSQL_PORT protocol=mysql
+                       dbname=ngx_test user=ngx_test password=ngx_test;
+    }
+_EOC_
+
 run_tests();
 
 no_diff();
@@ -14,18 +23,7 @@ no_diff();
 __DATA__
 
 === TEST 1: sanity
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-         #drizzle_keepalive max=1;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         set_form_input $sql 'sql';

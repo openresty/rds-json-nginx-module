@@ -1,4 +1,4 @@
-# vi:filetype=
+# vi:filetype=perl
 
 use lib 'lib';
 use Test::Nginx::Socket;
@@ -10,6 +10,15 @@ repeat_each(1);
 
 plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 
+$ENV{TEST_NGINX_MYSQL_PORT} ||= 3306;
+
+our $http_config = <<'_EOC_';
+    upstream backend {
+        drizzle_server 127.0.0.1:$TEST_NGINX_MYSQL_PORT protocol=mysql
+                       dbname=ngx_test user=ngx_test password=ngx_test;
+    }
+_EOC_
+
 #no_long_string();
 
 run_tests();
@@ -19,17 +28,7 @@ run_tests();
 __DATA__
 
 === TEST 1: sanity
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         drizzle_pass backend;
@@ -49,18 +48,7 @@ Content-Type: application/json
 
 
 === TEST 2: keep-alive
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
---- http_config
-    upstream backend {
-        drizzle_server localhost dbname=test
-             password=some_pass user=monty protocol=mysql;
-        drizzle_keepalive max=1;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         drizzle_pass backend;
@@ -76,18 +64,7 @@ GET /mysql
 
 
 === TEST 3: update
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-        drizzle_keepalive mode=single max=2 overflow=reject;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         drizzle_pass backend;
@@ -103,18 +80,7 @@ GET /mysql
 
 
 === TEST 4: select empty result
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-        drizzle_keepalive mode=multi max=1;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         drizzle_pass backend;
@@ -129,18 +95,7 @@ GET /mysql
 
 
 === TEST 5: update & no module header
-db init:
-
-create table cats (id integer, name text);
-insert into cats (id) values (2);
-insert into cats (id, name) values (3, 'bob');
-
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-        drizzle_keepalive mode=single max=2 overflow=reject;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         if ($arg_name ~ '[^A-Za-z0-9]') {
@@ -164,11 +119,7 @@ Content-Type: application/json
 
 
 === TEST 6: invalid SQL
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /mysql {
         drizzle_pass backend;
@@ -187,11 +138,7 @@ GET /mysql
 
 
 === TEST 7: single row, single col
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists singles";
@@ -222,11 +169,7 @@ GET /test
 
 
 === TEST 8: floating number and insert id
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
@@ -256,11 +199,7 @@ GET /test
 
 
 === TEST 9: text blob field
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
@@ -290,11 +229,7 @@ GET /test
 
 
 === TEST 10: bool blob field
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
@@ -328,11 +263,7 @@ GET /test
 
 
 === TEST 11: bit field
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
@@ -366,11 +297,7 @@ GET /test
 
 
 === TEST 12: date type
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
@@ -398,32 +325,8 @@ GET /test
 
 
 
-=== TEST 13: TEST
---- SKIP
---- http_config
-    upstream backend {
-        drizzle_server 10.232.36.3:3306 dbname=dp_0001
-             password=711TJS user=lzstat protocol=mysql;
-    }
---- config
-    location /test {
-        drizzle_query "select * from dpunit_tb_key_result__201008 limit 3";
-        drizzle_pass backend;
-        rds_json on;
-    }
---- request
-GET /test
---- response_body
-[]
-
-
-
-=== TEST 14: strings need to be escaped
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+=== TEST 13: strings need to be escaped
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
@@ -451,12 +354,8 @@ GET /test
 
 
 
-=== TEST 15: null values
---- http_config
-    upstream backend {
-        drizzle_server 127.0.0.1:3306 dbname=test
-             password=some_pass user=monty protocol=mysql;
-    }
+=== TEST 14: null values
+--- http_config eval: $::http_config
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
