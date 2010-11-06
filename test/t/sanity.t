@@ -333,7 +333,7 @@ GET /test
         echo;
         echo_location /mysql "create table foo (id serial, body char(25));";
         echo;
-        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\b你好\Z');";
+        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\bhello\Z');";
         echo;
         echo_location /mysql "select * from foo";
         echo;
@@ -350,7 +350,7 @@ GET /test
 {"errcode":0}
 {"errcode":0}
 {"errcode":0,"insert_id":1,"affected_rows":1}
-[{"id":1,"body":"a\r\nb\b你好\u001a"}]
+[{"id":1,"body":"a\r\nb\bhello\u001a"}]
 
 
 
