@@ -26,6 +26,7 @@ extern ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
 
 
 typedef enum {
+    json_format_normal,
     json_format_compact,
     json_format_pretty          /* TODO */
 
@@ -83,9 +84,9 @@ typedef struct {
 
     uint32_t                             field_data_rest;
 
-    ngx_flag_t                           header_sent;
-
-    ngx_flag_t                           seen_stream_end;
+    ngx_flag_t                           header_sent:1;
+    ngx_flag_t                           seen_stream_end:1;
+    ngx_flag_t                           generated_col_names:1;
 } ngx_http_rds_json_ctx_t;
 
 

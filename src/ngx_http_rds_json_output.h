@@ -18,6 +18,9 @@
 ngx_int_t ngx_http_rds_json_output_header(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_header_t *header);
 
+ngx_int_t ngx_http_rds_json_output_cols(ngx_http_request_t *r,
+        ngx_http_rds_json_ctx_t *ctx);
+
 ngx_int_t ngx_http_rds_json_output_literal(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len,
         ngx_flag_t last_buf);
