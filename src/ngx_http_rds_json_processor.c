@@ -52,9 +52,13 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
         goto invalid;
     }
 
+    dd("col count: %d", (int) header.col_count);
+
     if (header.col_count == 0) {
         /* for empty result set, just return the JSON
          * representation of the RDS header */
+
+        dd("col count == 0");
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
@@ -133,6 +137,7 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 {
     ngx_buf_t                       *b;
     ngx_int_t                        rc;
+    ngx_http_rds_json_conf_t        *conf;
 
     if (in == NULL) {
         return NGX_OK;
@@ -192,6 +197,23 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
         if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
             return rc;
         }
+
+        conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
+
+        if (conf->format == json_format_compact) {
+            rc = ngx_http_rds_json_output_cols(r, ctx);
+
+            if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+                return rc;
+            }
+        }
+
+        dd("after output literal");
+
+        if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+            return rc;
+        }
+
 
         dd("process col is entering process row...");
         return ngx_http_rds_json_process_row(r, in, ctx);

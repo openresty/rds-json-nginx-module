@@ -19,8 +19,9 @@
 #define ngx_http_rds_json_content_type  "application/json"
 
 static ngx_conf_enum_t  ngx_http_rds_json_formats[] = {
+    { ngx_string("normal"), json_format_normal },
     { ngx_string("compact"), json_format_compact },
-    { ngx_string("pretty"),  json_format_pretty },
+    /* { ngx_string("pretty"),  json_format_pretty }, */
     { ngx_null_string, 0 }
 };
 
@@ -332,7 +333,7 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->enabled, prev->enabled, 0);
 
-    ngx_conf_merge_uint_value(conf->format, prev->format, json_format_compact);
+    ngx_conf_merge_uint_value(conf->format, prev->format, json_format_normal);
 
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
             ngx_http_rds_json_content_type);

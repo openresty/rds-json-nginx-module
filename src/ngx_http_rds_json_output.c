@@ -211,6 +211,73 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
 
 ngx_int_t
+ngx_http_rds_json_output_cols(ngx_http_request_t *r,
+        ngx_http_rds_json_ctx_t *ctx)
+{
+    ngx_uint_t                           i;
+    ngx_http_rds_column_t               *col;
+    size_t                               size;
+    u_char                              *pos, *last;
+    uintptr_t                            key_escape = 0;
+
+    size = sizeof("[]") - 1;
+
+    for (i = 0; i < ctx->col_count; i++) {
+        col = &ctx->cols[i];
+        key_escape = ngx_http_rds_json_escape_json_str(NULL,
+                col->name.data, col->name.len);
+
+        dd("key_escape: %d", (int) key_escape);
+
+        size += col->name.len + key_escape
+              + sizeof("\"\"") - 1
+              ;
+
+        if (i != ctx->col_count - 1) {
+            /* not the last column */
+            size += sizeof(",") - 1;
+        }
+    }
+
+    ctx->generated_col_names = 1;
+
+    pos = ngx_http_rds_json_request_mem(r, ctx, size);
+    if (pos == NULL) {
+        return NGX_ERROR;
+    }
+
+    last = pos;
+
+
+    *last++ = '[';
+
+    for (i = 0; i < ctx->col_count; i++) {
+        col = &ctx->cols[i];
+
+        *last++ = '"';
+
+        if (key_escape == 0) {
+            last = ngx_copy(last, col->name.data, col->name.len);
+
+        } else {
+            last = (u_char *) ngx_http_rds_json_escape_json_str(last,
+                    col->name.data, col->name.len);
+        }
+
+        *last++ = '"';
+
+        if (i != ctx->col_count - 1) {
+            *last++ = ',';
+        }
+    }
+
+    *last++ = ']';
+
+    return ngx_http_rds_json_submit_mem(r, ctx, size, 0);
+}
+
+
+ngx_int_t
 ngx_http_rds_json_output_field(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len,
         ngx_flag_t is_null)
@@ -223,6 +290,12 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
     uintptr_t                            val_escape = 0;
     u_char                              *p;
     ngx_uint_t                           i;
+    ngx_http_rds_json_conf_t            *conf;
+    ngx_uint_t                           format;
+
+    conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
+
+    format = conf->format;
 
     dd("reading row %llu, col %d, len %d",
             (unsigned long long) ctx->row,
@@ -230,28 +303,47 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
     /* calculate the buffer size */
 
-    if (ctx->cur_col == 0) {
-        dd("first column");
-        if (ctx->row == 1) {
-            dd("first column, first row");
-            size = sizeof("{\"") - 1;
+    if (format == json_format_normal) {
+        if (ctx->cur_col == 0) {
+            dd("first column");
+            if (ctx->row == 1) {
+                dd("first column, first row");
+                size = sizeof("{\"") - 1;
+            } else {
+                size = sizeof(",{\"") - 1;
+            }
         } else {
-            size = sizeof(",{\"") - 1;
+            size = sizeof(",\"") - 1;
+        }
+
+    } else if (format == json_format_compact) {
+        if (ctx->cur_col == 0) {
+            dd("first column");
+            size = sizeof(",[") - 1;
+        } else {
+            size = sizeof(",") - 1;
         }
     } else {
-        size = sizeof(",\"") - 1;
+        return NGX_ERROR;
     }
 
     col = &ctx->cols[ctx->cur_col];
 
-    key_escape = ngx_http_rds_json_escape_json_str(NULL, col->name.data,
-            col->name.len);
+    if (format == json_format_normal) {
+        key_escape = ngx_http_rds_json_escape_json_str(NULL, col->name.data,
+                col->name.len);
 
-    dd("key_escape: %d", (int) key_escape);
+        dd("key_escape: %d", (int) key_escape);
 
-    size += col->name.len + key_escape
-          + sizeof("\":") - 1
-          ;
+        size += col->name.len + key_escape
+              + sizeof("\":") - 1
+              ;
+
+    } else if (format == json_format_compact) {
+        /* do nothing */
+    } else {
+        return NGX_ERROR;
+    }
 
     if (len == 0 && ctx->field_data_rest > 0) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
@@ -344,7 +436,14 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
             && ctx->cur_col == ctx->col_count - 1)
     {
         /* last column in the row */
-        size += sizeof("}") - 1;
+        if (format == json_format_normal) {
+            size += sizeof("}") - 1;
+
+        } else if (format == json_format_compact) {
+            size += sizeof("]") - 1;
+        } else {
+            return NGX_ERROR;
+        }
     }
 
     /* allocate the buffer */
@@ -358,29 +457,42 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
     /* fill up the buffer */
 
-    if (ctx->cur_col == 0) {
-        dd("first column");
-        if (ctx->row == 1) {
-            dd("first column, first row");
-            *last++ = '{';
+    if (format == json_format_normal) {
+        if (ctx->cur_col == 0) {
+            dd("first column");
+            if (ctx->row == 1) {
+                dd("first column, first row");
+                *last++ = '{';
+            } else {
+                *last++ = ','; *last++ = '{';
+            }
         } else {
-            *last++ = ','; *last++ = '{';
+            *last++ = ',';
         }
+
+        *last++ = '"';
+
+        if (key_escape == 0) {
+            last = ngx_copy(last, col->name.data, col->name.len);
+
+        } else {
+            last = (u_char *) ngx_http_rds_json_escape_json_str(last,
+                    col->name.data, col->name.len);
+        }
+
+        *last++ = '"'; *last++ = ':';
+
+    } else if (format == json_format_compact) {
+        if (ctx->cur_col == 0) {
+            dd("first column");
+            *last++ = ','; *last++ = '[';
+        } else {
+            *last++ = ',';
+        }
+
     } else {
-        *last++ = ',';
+        return NGX_ERROR;
     }
-
-    *last++ = '"';
-
-    if (key_escape == 0) {
-        last = ngx_copy(last, col->name.data, col->name.len);
-
-    } else {
-        last = (u_char *) ngx_http_rds_json_escape_json_str(last,
-                col->name.data, col->name.len);
-    }
-
-    *last++ = '"'; *last++ = ':';
 
     if (is_null) {
         dd("copy null value over");
@@ -443,7 +555,13 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
             && ctx->cur_col == ctx->col_count - 1)
     {
         dd("last column in the row");
-        *last++ = '}';
+        if (format == json_format_normal) {
+            *last++ = '}';
+        } else if (format == json_format_compact) {
+            *last++ = ']';
+        } else {
+            return NGX_ERROR;
+        }
     }
 
     if ((size_t) (last - pos) != size) {
@@ -468,6 +586,9 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
     uintptr_t                        escape = 0;
     u_char                          *p;
     ngx_uint_t                       i;
+    ngx_http_rds_json_conf_t        *conf;
+
+    conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
     /* calculate the buffer size */
 
@@ -511,7 +632,13 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
             && ctx->cur_col == ctx->col_count - 1)
     {
         /* last column in the row */
-        size += sizeof("}") - 1;
+        if (conf->format == json_format_normal) {
+            size += sizeof("}") - 1;
+        } else if (conf->format == json_format_compact) {
+            size += sizeof("]") - 1;
+        } else {
+            return NGX_ERROR;
+        }
     }
 
     /* allocate the buffer */
@@ -569,7 +696,13 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
             ctx->cur_col == ctx->col_count - 1)
     {
         /* last column in the row */
-        *last++ = '}';
+        if (conf->format == json_format_normal) {
+            *last++ = '}';
+        } else if (conf->format == json_format_compact) {
+            *last++ = ']';
+        } else {
+            return NGX_ERROR;
+        }
     }
 
     if ((size_t) (last - pos) != size) {
