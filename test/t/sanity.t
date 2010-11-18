@@ -1,4 +1,4 @@
-# vi:filetype=perl
+# vi:filetype=
 
 use lib 'lib';
 use Test::Nginx::Socket;
@@ -325,15 +325,21 @@ GET /test
 
 
 
-=== TEST 13: strings need to be escaped
---- http_config eval: $::http_config
+=== TEST 13: strings need to be escaped (forcing utf8)
+--- http_config
+    upstream backend {
+        drizzle_server 127.0.0.1:$TEST_NGINX_MYSQL_PORT protocol=mysql
+                       dbname=ngx_test user=ngx_test password=ngx_test
+                       charset=utf8;
+    }
+
 --- config
     location /test {
         echo_location /mysql "drop table if exists foo";
         echo;
         echo_location /mysql "create table foo (id serial, body char(25));";
         echo;
-        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\bhello\Z');";
+        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\b你好\Z');";
         echo;
         echo_location /mysql "select * from foo";
         echo;
@@ -350,11 +356,41 @@ GET /test
 {"errcode":0}
 {"errcode":0}
 {"errcode":0,"insert_id":1,"affected_rows":1}
-[{"id":1,"body":"a\r\nb\bhello\u001a"}]
+[{"id":1,"body":"a\r\nb\b??\u001a"}]
+--- timeout: 5
 
 
 
-=== TEST 14: null values
+=== TEST 14: strings need to be escaped
+--- http_config eval: $::http_config
+--- config
+    location /test {
+        echo_location /mysql "drop table if exists foo";
+        echo;
+        echo_location /mysql "create table foo (id serial, body char(25));";
+        echo;
+        echo_location /mysql "insert into foo (body) values ('a\\r\\nb\\b你好\Z');";
+        echo;
+        echo_location /mysql "select * from foo";
+        echo;
+    }
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_module_header off;
+        drizzle_query $query_string;
+        rds_json on;
+    }
+--- request
+GET /test
+--- response_body
+{"errcode":0}
+{"errcode":0}
+{"errcode":0,"insert_id":1,"affected_rows":1}
+[{"id":1,"body":"a\r\nb\b你好\u001a"}]
+
+
+
+=== TEST 15: null values
 --- http_config eval: $::http_config
 --- config
     location /test {
