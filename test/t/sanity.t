@@ -421,3 +421,20 @@ GET /test
 [{"id":1,"name":"","age":null},{"id":2,"name":null,"age":0}]
 --- timeout: 10
 
+
+
+=== TEST 16: call proc
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        #drizzle_dbname $dbname;
+        drizzle_query "call myproc()";
+        rds_json on;
+    }
+--- request
+GET /mysql
+--- response_body chop
+{"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
+--- SKIP
+
