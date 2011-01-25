@@ -88,12 +88,12 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/ >), for
-    example, the version 0.8.53 (see nginx compatibility), and then build
+    example, the version 0.8.54 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://sysoev.ru/nginx/nginx-0.8.53.tar.gz'
-        $ tar -xzvf nginx-0.8.53.tar.gz
-        $ cd nginx-0.8.53/
+        $ wget 'http://sysoev.ru/nginx/nginx-0.8.54.tar.gz'
+        $ tar -xzvf nginx-0.8.54.tar.gz
+        $ cd nginx-0.8.54/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         $ ./configure --prefix=/opt/nginx \
@@ -110,9 +110,11 @@ Installation
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   0.8.x (last tested: 0.8.53)
+    *   0.9.x (last tested: 0.9.4)
 
-    *   0.7.x >= 0.7.46 (last tested version is 0.7.66)
+    *   0.8.x (last tested: 0.8.54)
+
+    *   0.7.x >= 0.7.46 (last tested: 0.7.68)
 
     Earlier versions of Nginx like 0.6.x and 0.5.x will *not* work.
 
@@ -135,9 +137,9 @@ Author
 Copyright & License
     This module is licenced under the BSD license.
 
-    Copyright (c) 2009-2010, Taobao Inc., Alibaba Group ( http://www.taobao.com ).
+    Copyright (c) 2009, 2010, 2011, Taobao Inc., Alibaba Group ( http://www.taobao.com ).
 
-    Copyright (C) 2009-2010, Yichun Zhang (agentzh) <agentzh@gmail.com>.
+    Copyright (C) 2009, 2010, 2011, Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>.
 
     All rights reserved.
 
