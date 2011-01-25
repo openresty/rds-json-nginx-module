@@ -31,6 +31,16 @@ fi
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
     ./configure --prefix=/opt/nginx \
           --with-cc-opt="-O1" \
+            --without-mail_pop3_module \
+            --without-mail_imap_module \
+            --without-mail_smtp_module \
+            --without-http_upstream_ip_hash_module \
+            --without-http_empty_gif_module \
+            --without-http_memcached_module \
+            --without-http_referer_module \
+            --without-http_autoindex_module \
+            --without-http_auth_basic_module \
+            --without-http_userid_module \
           --add-module=$root/../eval-nginx-module \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root/../xss-nginx-module \

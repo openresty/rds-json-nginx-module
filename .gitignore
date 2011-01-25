@@ -12,7 +12,7 @@ print.txt
 .rsync
 *.tar.gz
 dist
-build[78]
+build[789]
 build
 tags
 update-readme
@@ -61,3 +61,8 @@ src/utils.h
 src/handler.c
 src/handler.h
 util/bench
+pack
+restart
+misc/
+t/servroot/
+all.sh
