@@ -20,7 +20,7 @@ update-readme
 test/Makefile
 test/blib
 test.sh
-t.sh
+go
 t/t.sh
 test/t/servroot/
 releng
@@ -65,4 +65,5 @@ pack
 restart
 misc/
 t/servroot/
-all.sh
+all
+build10
