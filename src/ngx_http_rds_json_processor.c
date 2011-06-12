@@ -62,7 +62,9 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: header: there's unexpected remaining data in the buf");
+                    "rds_json: header: there's unexpected remaining data "
+                    "in the buf");
+
             goto invalid;
         }
 
@@ -271,7 +273,8 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: row: there's unexpected remaining data in the buf");
+                    "rds_json: row: there's unexpected remaining data "
+                    "in the buf");
             return NGX_ERROR;
         }
 
@@ -337,8 +340,8 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
         if (b->last - b->pos < (ssize_t) sizeof(uint32_t)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                   "rds_json: field size is incomplete in the buf: %*s (len: %d)",
-                   b->last - b->pos, b->pos,
+                   "rds_json: field size is incomplete in the buf: %*s "
+                   "(len: %d)", b->last - b->pos, b->pos,
                    (int) (b->last - b->pos));
 
             return NGX_ERROR;
@@ -356,7 +359,9 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
             len = 0;
             ctx->field_data_rest = 0;
 
-            rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len, 1 /* is null */);
+            rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len,
+                    1 /* is null */);
+
         } else {
             len = (uint32_t) (b->last - b->pos);
 
@@ -366,7 +371,8 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
             ctx->field_data_rest = total - len;
 
-            rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len, 0 /* not null */);
+            rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len,
+                    0 /* not null */);
         }
 
         if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {

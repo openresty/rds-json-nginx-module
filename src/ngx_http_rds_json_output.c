@@ -99,7 +99,8 @@ ngx_http_rds_json_output_bufs(ngx_http_request_t *r,
             return rc;
         }
 
-        ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out, ctx->tag);
+        ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out,
+                ctx->tag);
 
         ctx->last_out = &ctx->out;
     }
@@ -347,7 +348,8 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
     if (len == 0 && ctx->field_data_rest > 0) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: at least one octet should go with the field size in one buf");
+                "rds_json: at least one octet should go with the field size "
+                "in one buf");
 
         return NGX_ERROR;
     }
@@ -668,7 +670,8 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
             last = ngx_copy(last, data, len);
 
         } else {
-            dd("more field data: string value escape non-zero: %d", (int) escape);
+            dd("more field data: string value escape non-zero: %d",
+                    (int) escape);
 
 #if DDEBUG
                 p = last;

@@ -338,7 +338,8 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
             ngx_http_rds_json_content_type);
 
-    ngx_conf_merge_size_value(conf->buf_size, prev->buf_size, (size_t) ngx_pagesize);
+    ngx_conf_merge_size_value(conf->buf_size, prev->buf_size,
+            (size_t) ngx_pagesize);
 
     return NGX_CONF_OK;
 }
