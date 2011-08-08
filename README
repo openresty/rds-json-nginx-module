@@ -88,12 +88,12 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/ >), for
-    example, the version 1.0.4 (see nginx compatibility), and then build
+    example, the version 1.0.5 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://sysoev.ru/nginx/nginx-1.0.4.tar.gz'
-        $ tar -xzvf nginx-1.0.4.tar.gz
-        $ cd nginx-1.0.4/
+        $ wget 'http://sysoev.ru/nginx/nginx-1.0.5.tar.gz'
+        $ tar -xzvf nginx-1.0.5.tar.gz
+        $ cd nginx-1.0.5/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         $ ./configure --prefix=/opt/nginx \
@@ -110,11 +110,11 @@ Installation
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   1.0.x (last tested: 1.0.4)
+    *   1.0.x (last tested: 1.0.5)
 
     *   0.9.x (last tested: 0.9.4)
 
-    *   0.8.x (last tested: 0.8.54)
+    *   0.8.x (last tested: 0.8.55)
 
     *   0.7.x >= 0.7.46 (last tested: 0.7.68)
 
