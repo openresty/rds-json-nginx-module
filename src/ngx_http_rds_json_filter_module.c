@@ -31,7 +31,7 @@ ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
 
 
 static char *ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
-        void* conf);
+        void *conf);
 
 static void *ngx_http_rds_json_create_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent,
@@ -347,7 +347,7 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
 static char *
 ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
-        void* conf)
+        void *conf)
 {
     ngx_http_rds_json_conf_t            *jlcf = conf;
     ngx_http_core_loc_conf_t            *clcf;
