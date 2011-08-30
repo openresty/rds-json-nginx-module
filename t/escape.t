@@ -23,7 +23,7 @@ run_tests();
 
 __DATA__
 
-=== TEST 1: escaping table names (normal mode)
+=== TEST 1: escaping column names (normal mode)
 --- http_config eval: $::http_config
 --- config
     location /mysql {
@@ -40,7 +40,7 @@ GET /mysql
 
 
 
-=== TEST 2: escaping table names (compact mode)
+=== TEST 2: escaping column names (compact mode)
 --- http_config eval: $::http_config
 --- config
     location /mysql {
