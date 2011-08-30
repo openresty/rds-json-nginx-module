@@ -68,3 +68,4 @@ t/servroot/
 all
 build10
 buildroot/
+*.html

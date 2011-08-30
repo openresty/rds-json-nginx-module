@@ -257,13 +257,8 @@ ngx_http_rds_json_output_cols(ngx_http_request_t *r,
 
         *last++ = '"';
 
-        if (key_escape == 0) {
-            last = ngx_copy(last, col->name.data, col->name.len);
-
-        } else {
-            last = (u_char *) ngx_http_rds_json_escape_json_str(last,
-                    col->name.data, col->name.len);
-        }
+        last = (u_char *) ngx_http_rds_json_escape_json_str(last,
+                col->name.data, col->name.len);
 
         *last++ = '"';
 
