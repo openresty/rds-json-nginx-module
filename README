@@ -134,14 +134,14 @@ See Also
     * ngx_postgres ( http://github.com/FRiCKLE/ngx_postgres/ )
 
 Author
-    agentzh (章亦春) <agentzh at gmail dot com>
+    Zhang "agentzh" Yichun (章亦春) <agentzh at gmail dot com>
 
 Copyright & License
     This module is licenced under the BSD license.
 
     Copyright (c) 2009, 2010, 2011, Taobao Inc., Alibaba Group ( http://www.taobao.com ).
 
-    Copyright (C) 2009, 2010, 2011, Yichun "agentzh" Zhang (章亦春) <agentzh@gmail.com>.
+    Copyright (C) 2009, 2010, 2011, Zhang "agentzh" Yichun (章亦春) <agentzh@gmail.com>.
 
     All rights reserved.
 
