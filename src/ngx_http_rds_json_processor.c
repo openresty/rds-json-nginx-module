@@ -294,6 +294,7 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
     if (b->pos == b->last) {
         in = in->next;
+
     } else {
         dd("process row: buf not consumed completely");
     }
