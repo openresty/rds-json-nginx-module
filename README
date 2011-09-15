@@ -67,9 +67,32 @@ Directives
 
         that is, the first row holds the column name list.
 
+    rds_json_root
+        syntax: rds_json_root <key>
+        default: no
+
+        specify the "root" key for data rows (if any).
+
+        For example,
+
+            rds_json on;
+            rds_json_root rows;
+
+        will return JSON output like this:
+
+            {"rows":[{"id":2,"name":null},{"id":3,"name":"bob"}]}
+
+        if "rds_json_format compact" is also specified, then the
+        output will look like this:
+
+            {"rows":[["id","name"],[2,null],[3,"bob"]]}
+
+        Nginx variables are not supported in the <key> argument of
+        this directive.
+
     rds_json_ret
         syntax: rds_json_ret <error-code> <descrption>
-        default: none
+        default: no
 
         This directive enables a content handler that simply emits
         an response body like this:

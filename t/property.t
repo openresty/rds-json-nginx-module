@@ -108,3 +108,20 @@ GET /mysql
 --- response_body chop
 {"data":[["id","name"]]}
 
+
+
+=== TEST 6: select empty result + compact + escaping
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_query "select * from cats where name='tom'";
+        rds_json on;
+        rds_json_root "'\"\\:";
+        rds_json_format compact;
+    }
+--- request
+GET /mysql
+--- response_body chop
+{"'\"\\:":[["id","name"]]}
+
