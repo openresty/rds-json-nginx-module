@@ -34,12 +34,19 @@ typedef enum {
 
 
 typedef struct {
+    ngx_str_t                       key;
+    ngx_http_complex_value_t        value;
+} ngx_http_rds_json_property_t;
+
+
+typedef struct {
     ngx_flag_t                       enabled;
     ngx_uint_t                       format;
     ngx_str_t                        content_type;
     ngx_str_t                        root; /* rds_json_root key */
     ngx_str_t                        success; /* rds_json_success_property
                                                * key */
+    ngx_array_t                     *user_props; /* rds_json_user_property */
 
     size_t                           buf_size;
 

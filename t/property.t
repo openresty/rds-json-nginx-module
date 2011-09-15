@@ -215,3 +215,92 @@ GET /mysql
 --- response_body chop
 {"success":true,"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
 
+
+
+=== TEST 12: update (user property)
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        #drizzle_dbname $dbname;
+        drizzle_query "update cats set name='bob' where name='bob'";
+        rds_json on;
+
+        set $name 'Jimmy';
+        rds_json_user_property name $name;
+    }
+--- request
+GET /mysql
+--- response_body chop
+{"name":"Jimmy","errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
+
+
+
+=== TEST 13: update (multi user property)
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        #drizzle_dbname $dbname;
+        drizzle_query "update cats set name='bob' where name='bob'";
+        rds_json on;
+
+        set $name 'Jimmy"';
+        set $age 32;
+        rds_json_user_property name $name;
+        rds_json_user_property age $age;
+    }
+--- request
+GET /mysql
+--- response_body chop
+{"name":"Jimmy\"","age":"32","errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
+
+
+
+=== TEST 14: compact + user property
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_query '
+            select * from cats order by id asc
+        ';
+        drizzle_pass backend;
+        rds_json on;
+        rds_json_root rows;
+        set $val 'bar"';
+        rds_json_user_property foo $val;
+        rds_json_format compact;
+    }
+--- request
+GET /mysql
+--- response_body chomp
+{"foo":"bar\"","rows":[["id","name"],[2,null],[3,"bob"]]}
+
+
+
+=== TEST 15: compact + user property + success
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_query '
+            select * from cats order by id asc
+        ';
+        drizzle_pass backend;
+
+        rds_json on;
+        rds_json_root rows;
+
+        rds_json_success_property suc;
+
+        set $val 'bar"';
+        rds_json_user_property foo $val;
+
+        set $baz '"baz"\\';
+        rds_json_user_property '\\bar' $baz;
+        rds_json_format compact;
+    }
+--- request
+GET /mysql
+--- response_body chomp
+{"suc":true,"foo":"bar\"","\\bar":"\"baz\"\\","rows":[["id","name"],[2,null],[3,"bob"]]}
+

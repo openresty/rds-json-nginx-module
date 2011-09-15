@@ -40,6 +40,8 @@ static char * ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf);
 static char * ngx_http_rds_json_success_property(ngx_conf_t *cf,
         ngx_command_t *cmd, void *conf);
+static char * ngx_http_rds_json_user_property(ngx_conf_t *cf,
+        ngx_command_t *cmd, void *conf);
 
 
 static ngx_command_t  ngx_http_rds_json_commands[] = {
@@ -67,6 +69,15 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
           |NGX_CONF_TAKE1,
       ngx_http_rds_json_success_property,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("rds_json_user_property"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
+          |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_TAKE2,
+      ngx_http_rds_json_user_property,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -333,6 +344,7 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
      *     conf->content_type = { 0, NULL };
      *     conf->root         = { 0, NULL };
      *     conf->success      = { 0, NULL };
+     *     conf->user_props   = NULL;
      *     conf->errcode      = { 0, NULL };
      *     conf->errstr       = NULL;
      */
@@ -366,7 +378,11 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->success, prev->success,
             "");
 
-    if (conf->success.len && conf->root.len == 0) {
+    if (conf->user_props == NULL) {
+        conf->user_props = prev->user_props;
+    }
+
+    if (conf->root.len == 0 && (conf->success.len || conf->user_props)) {
         ngx_str_set(&conf->root, "\"data\"");
     }
 
@@ -493,7 +509,7 @@ ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
     *p++ = '"';
 
     if (p - jlcf->root.data != (ssize_t) jlcf->root.len) {
-        return " sees buffer error";
+        return "sees buffer error";
     }
 
     return NGX_CONF_OK;
@@ -544,7 +560,85 @@ ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
     *p++ = '"';
 
     if (p - jlcf->success.data != (ssize_t) jlcf->success.len) {
-        return " sees buffer error";
+        return "sees buffer error";
+    }
+
+    return NGX_CONF_OK;
+}
+
+
+static char *
+ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf)
+{
+    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_str_t                           *value;
+    ngx_http_rds_json_property_t        *prop;
+    uintptr_t                            escape;
+    u_char                              *p;
+
+    ngx_http_compile_complex_value_t         ccv;
+
+    value = cf->args->elts;
+
+    if (value[1].len == 0) {
+        return "takes an empty key";
+    }
+
+    if (value[2].len == 0) {
+        return "takes an empty value";
+    }
+
+    if (jlcf->user_props == NULL) {
+        jlcf->user_props = ngx_array_create(cf->pool, 4,
+                            sizeof(ngx_http_rds_json_property_t));
+
+        if (jlcf->user_props == NULL) {
+            return NGX_CONF_ERROR;
+        }
+    }
+
+    prop = ngx_array_push(jlcf->user_props);
+
+    /* process the user property key */
+
+    escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
+            value[1].len);
+
+    prop->key.len = value[1].len + escape + sizeof("\"\"") - 1;
+
+    p = ngx_palloc(cf->pool, prop->key.len);
+    if (p == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    prop->key.data = p;
+
+    *p++ = '"';
+
+    if (escape == 0) {
+        p = ngx_copy(p, value[1].data, value[1].len);
+
+    } else {
+        p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
+                value[1].len);
+    }
+
+    *p++ = '"';
+
+    if (p - prop->key.data != (ssize_t) prop->key.len) {
+        return "sees buffer error";
+    }
+
+    /* process the user property value */
+
+    ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
+    ccv.cf = cf;
+    ccv.value = &value[2];
+    ccv.complex_value = &prop->value;
+
+    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
+        return NGX_CONF_ERROR;
     }
 
     return NGX_CONF_OK;

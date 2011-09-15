@@ -105,6 +105,20 @@ Directives
         Specify the top-level object property name used in the JSON output
         for indicating success or false of the query.
 
+    rds_json_user_property
+        syntax: rds_json_user_property <key> <value>
+        default: no
+
+        Specify additonal user properties for the top-level object
+        of the JSON output.
+
+        Multiple instances of this directives are allowed in a single scope.
+
+        Nginx variables are supported in the <value> argument.
+
+        Both of the <key> and <value> arguments will be automatically
+        quoted according to JSON strings' notation.
+
     rds_json_ret
         syntax: rds_json_ret <error-code> <descrption>
         default: no

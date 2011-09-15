@@ -118,7 +118,11 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
     size_t                   size;
     uintptr_t                escape;
     unsigned                 last_buf = 0;
+    ngx_uint_t               i;
+    ngx_str_t               *values = NULL;
+    uintptr_t               *escapes = NULL;
 
+    ngx_http_rds_json_property_t        *prop = NULL;
     ngx_http_rds_json_conf_t            *conf;
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
@@ -137,6 +141,34 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
         } else {
             size += sizeof("false") - 1;
+        }
+    }
+
+    if (conf->user_props) {
+        values = ngx_pnalloc(r->pool,
+                    conf->user_props->nelts * (sizeof(ngx_str_t) +
+                    sizeof(uintptr_t)));
+
+        if (values == NULL) {
+            return NGX_ERROR;
+        }
+
+        escapes = (uintptr_t *) ((u_char *) values +
+                  conf->user_props->nelts * sizeof(ngx_str_t));
+
+        prop = conf->user_props->elts;
+        for (i = 0; i < conf->user_props->nelts; i++) {
+            if (ngx_http_complex_value(r, &prop[i].value, &values[i])
+                != NGX_OK)
+            {
+                return NGX_ERROR;
+            }
+
+            escapes[i] = ngx_http_rds_json_escape_json_str(NULL, values[i].data,
+                values[i].len);
+
+            size += sizeof(":\"\",") - 1 + prop[i].key.len + values[i].len
+                  + escapes[i];
         }
     }
 
@@ -185,6 +217,25 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
         } else {
             last = ngx_copy_literal(last, ":false,");
+        }
+    }
+
+    if (conf->user_props) {
+        for (i = 0; i < conf->user_props->nelts; i++) {
+            last = ngx_copy(last, prop[i].key.data, prop[i].key.len);
+            *last++ = ':';
+            *last++ = '"';
+
+            if (escapes[i] == 0) {
+                last = ngx_copy(last, values[i].data, values[i].len);
+
+            } else {
+                last = (u_char *) ngx_http_rds_json_escape_json_str(last,
+                    values[i].data, values[i].len);
+            }
+
+            *last++ = '"';
+            *last++ = ',';
         }
     }
 
@@ -244,13 +295,46 @@ ngx_int_t
 ngx_http_rds_json_output_props(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_conf_t *conf)
 {
-    size_t                               size;
-    u_char                              *pos, *last;
+    size_t                   size;
+    u_char                  *pos, *last;
+    ngx_uint_t               i;
+    ngx_str_t               *values = NULL;
+    uintptr_t               *escapes = NULL;
+
+    ngx_http_rds_json_property_t        *prop = NULL;
 
     size = sizeof("{:") - 1 + conf->root.len;
 
     if (conf->success.len) {
         size += sizeof(",:true") - 1 + conf->success.len;
+    }
+
+    if (conf->user_props) {
+        values = ngx_pnalloc(r->pool,
+                    conf->user_props->nelts * (sizeof(ngx_str_t) +
+                    sizeof(uintptr_t)));
+
+        if (values == NULL) {
+            return NGX_ERROR;
+        }
+
+        escapes = (uintptr_t *) ((u_char *) values +
+                  conf->user_props->nelts * sizeof(ngx_str_t));
+
+        prop = conf->user_props->elts;
+        for (i = 0; i < conf->user_props->nelts; i++) {
+            if (ngx_http_complex_value(r, &prop[i].value, &values[i])
+                != NGX_OK)
+            {
+                return NGX_ERROR;
+            }
+
+            escapes[i] = ngx_http_rds_json_escape_json_str(NULL, values[i].data,
+                values[i].len);
+
+            size += sizeof(":\"\",") - 1 + prop[i].key.len + values[i].len
+                  + escapes[i];
+        }
     }
 
     pos = ngx_http_rds_json_request_mem(r, ctx, size);
@@ -265,6 +349,25 @@ ngx_http_rds_json_output_props(ngx_http_request_t *r,
     if (conf->success.len) {
         last = ngx_copy(last, conf->success.data, conf->success.len);
         last = ngx_copy_literal(last, ":true,");
+    }
+
+    if (conf->user_props) {
+        for (i = 0; i < conf->user_props->nelts; i++) {
+            last = ngx_copy(last, prop[i].key.data, prop[i].key.len);
+            *last++ = ':';
+            *last++ = '"';
+
+            if (escapes[i] == 0) {
+                last = ngx_copy(last, values[i].data, values[i].len);
+
+            } else {
+                last = (u_char *) ngx_http_rds_json_escape_json_str(last,
+                    values[i].data, values[i].len);
+            }
+
+            *last++ = '"';
+            *last++ = ',';
+        }
     }
 
     last = ngx_copy(last, conf->root.data, conf->root.len);
