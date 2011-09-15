@@ -119,12 +119,26 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
     uintptr_t                escape;
     unsigned                 last_buf = 0;
 
+    ngx_http_rds_json_conf_t            *conf;
+
+    conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
+
     /* calculate the buffer size */
 
     size = sizeof("{\"errcode\":") - 1
          + ngx_get_num_size(header->std_errcode)
          + sizeof("}") - 1
          ;
+
+    if (conf->success.len) {
+        size += conf->success.len + sizeof(":,") - 1;
+        if (header->std_errcode == 0) {
+            size += sizeof("true") - 1;
+
+        } else {
+            size += sizeof("false") - 1;
+        }
+    }
 
     if (header->errstr.len) {
         escape = ngx_http_rds_json_escape_json_str(NULL, header->errstr.data,
@@ -161,13 +175,26 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
     /* fill up the buffer */
 
-    last = ngx_copy_const_str(last, "{\"errcode\":");
+    *last++ = '{';
+
+    if (conf->success.len) {
+        last = ngx_copy(last, conf->success.data, conf->success.len);
+
+        if (header->std_errcode == 0) {
+            last = ngx_copy_literal(last, ":true,");
+
+        } else {
+            last = ngx_copy_literal(last, ":false,");
+        }
+    }
+
+    last = ngx_copy_literal(last, "\"errcode\":");
 
     last = ngx_snprintf(last, NGX_UINT16_LEN, "%uD",
             (uint32_t) header->std_errcode);
 
     if (header->errstr.len) {
-        last = ngx_copy_const_str(last, ",\"errstr\":\"");
+        last = ngx_copy_literal(last, ",\"errstr\":\"");
 
         if (escape == 0) {
             last = ngx_copy(last, header->errstr.data,
@@ -182,13 +209,13 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
     }
 
     if (header->insert_id) {
-        last = ngx_copy_const_str(last, ",\"insert_id\":");
+        last = ngx_copy_literal(last, ",\"insert_id\":");
         last = ngx_snprintf(last, NGX_UINT64_LEN, "%uL",
                 header->insert_id);
     }
 
     if (header->affected_rows) {
-        last = ngx_copy_const_str(last, ",\"affected_rows\":");
+        last = ngx_copy_literal(last, ",\"affected_rows\":");
         last = ngx_snprintf(last, NGX_UINT64_LEN, "%uL",
                 header->affected_rows);
     }
@@ -197,7 +224,8 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
     if ((size_t) (last - pos) != size) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: output header buffer error");
+                "rds_json: output header buffer error: %O != %uz",
+                (off_t) (last - pos), size);
 
         return NGX_ERROR;
     }
@@ -213,13 +241,17 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
 
 ngx_int_t
-ngx_http_rds_json_output_props_begin(ngx_http_request_t *r,
+ngx_http_rds_json_output_props(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_conf_t *conf)
 {
     size_t                               size;
     u_char                              *pos, *last;
 
     size = sizeof("{:") - 1 + conf->root.len;
+
+    if (conf->success.len) {
+        size += sizeof(",:true") - 1 + conf->success.len;
+    }
 
     pos = ngx_http_rds_json_request_mem(r, ctx, size);
     if (pos == NULL) {
@@ -229,6 +261,12 @@ ngx_http_rds_json_output_props_begin(ngx_http_request_t *r,
     last = pos;
 
     *last++ = '{';
+
+    if (conf->success.len) {
+        last = ngx_copy(last, conf->success.data, conf->success.len);
+        last = ngx_copy_literal(last, ":true,");
+    }
+
     last = ngx_copy(last, conf->root.data, conf->root.len);
     *last++ = ':';
 
@@ -525,11 +563,11 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
     if (is_null) {
         dd("copy null value over");
-        last = ngx_copy_const_str(last, "null");
+        last = ngx_copy_literal(last, "null");
 
     } else if (len == 0) {
         dd("copy emtpy string over");
-        last = ngx_copy_const_str(last, "\"\"");
+        last = ngx_copy_literal(last, "\"\"");
     } else {
         switch (col->std_type & 0xc000) {
         case rds_rough_col_type_int:
@@ -542,9 +580,9 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
 
         case rds_rough_col_type_bool:
             if (bool_val) {
-                last = ngx_copy_const_str(last, "true");
+                last = ngx_copy_literal(last, "true");
             } else {
-                last = ngx_copy_const_str(last, "false");
+                last = ngx_copy_literal(last, "false");
             }
             break;
 

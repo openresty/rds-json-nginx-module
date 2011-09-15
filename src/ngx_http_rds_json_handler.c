@@ -65,12 +65,12 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     /* copy data over to the buffer */
 
-    b->last = ngx_copy_const_str(b->last, "{\"errcode\":");
+    b->last = ngx_copy_literal(b->last, "{\"errcode\":");
 
     b->last = ngx_copy(b->last, conf->errcode.data, conf->errcode.len);
 
     if (errstr.len) {
-        b->last = ngx_copy_const_str(b->last, ",\"errstr\":\"");
+        b->last = ngx_copy_literal(b->last, ",\"errstr\":\"");
 
         if (escape == 0) {
             b->last = ngx_copy(b->last, errstr.data, errstr.len);

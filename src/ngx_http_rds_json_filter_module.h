@@ -37,7 +37,9 @@ typedef struct {
     ngx_flag_t                       enabled;
     ngx_uint_t                       format;
     ngx_str_t                        content_type;
-    ngx_str_t                        root;
+    ngx_str_t                        root; /* rds_json_root key */
+    ngx_str_t                        success; /* rds_json_success_property
+                                               * key */
 
     size_t                           buf_size;
 

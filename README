@@ -71,7 +71,7 @@ Directives
         syntax: rds_json_root <key>
         default: no
 
-        specify the "root" key for data rows (if any).
+        Specify the "root" key for data rows (if any).
 
         For example,
 
@@ -89,6 +89,21 @@ Directives
 
         Nginx variables are not supported in the <key> argument of
         this directive.
+
+        If this directive is not defined, neither are rds_json_success_property,
+        nor rds_json_extra_property, the JSON output for select queries will
+        just be an array at the
+        top level.
+
+        When either rds_json_success_property or rds_json_extra_property are specified,
+        this directive takes a default argument of "data".
+
+    rds_json_success_property
+        syntax: rds_json_success_property <key>
+        default: no
+
+        Specify the top-level object property name used in the JSON output
+        for indicating success or false of the query.
 
     rds_json_ret
         syntax: rds_json_ret <error-code> <descrption>

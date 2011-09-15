@@ -12,8 +12,8 @@
 #define NGX_UINT16_LEN (sizeof("65535") - 1)
 #endif
 
-#ifndef ngx_copy_const_str
-#define ngx_copy_const_str(p, s)  ngx_copy(p, s, sizeof(s) - 1)
+#ifndef ngx_copy_literal
+#define ngx_copy_literal(p, s)  ngx_copy(p, s, sizeof(s) - 1)
 #endif
 
 

@@ -38,6 +38,8 @@ static char *ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent,
 static ngx_int_t ngx_http_rds_json_filter_init(ngx_conf_t *cf);
 static char * ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf);
+static char * ngx_http_rds_json_success_property(ngx_conf_t *cf,
+        ngx_command_t *cmd, void *conf);
 
 
 static ngx_command_t  ngx_http_rds_json_commands[] = {
@@ -56,6 +58,15 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
           |NGX_CONF_TAKE1,
       ngx_http_rds_json_root,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("rds_json_success_property"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
+          |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_TAKE1,
+      ngx_http_rds_json_success_property,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -250,7 +261,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         ngx_http_rds_json_discard_bufs(r->pool, in);
 
         return NGX_OK;
-        break;
+
     default:
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                        "rds_json: invalid internal state: %d",
@@ -320,9 +331,10 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
      * set by ngx_pcalloc():
      *
      *     conf->content_type = { 0, NULL };
-     *     conf->root = { 0, NULL };
-     *     conf->errcode = { 0, NULL };
-     *     conf->errstr = NULL;
+     *     conf->root         = { 0, NULL };
+     *     conf->success      = { 0, NULL };
+     *     conf->errcode      = { 0, NULL };
+     *     conf->errstr       = NULL;
      */
 
     conf->enabled = NGX_CONF_UNSET;
@@ -347,6 +359,16 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_value(conf->enabled, prev->enabled, 0);
 
     ngx_conf_merge_uint_value(conf->format, prev->format, json_format_normal);
+
+    ngx_conf_merge_str_value(conf->root, prev->root,
+            "");
+
+    ngx_conf_merge_str_value(conf->success, prev->success,
+            "");
+
+    if (conf->success.len && conf->root.len == 0) {
+        ngx_str_set(&conf->root, "\"data\"");
+    }
 
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
             ngx_http_rds_json_content_type);
@@ -471,6 +493,57 @@ ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
     *p++ = '"';
 
     if (p - jlcf->root.data != (ssize_t) jlcf->root.len) {
+        return " sees buffer error";
+    }
+
+    return NGX_CONF_OK;
+}
+
+
+static char *
+ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf)
+{
+    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_str_t                           *value;
+    uintptr_t                            escape;
+    u_char                              *p;
+
+    value = cf->args->elts;
+
+    if (jlcf->success.len) {
+        return "is duplicate";
+    }
+
+    if (value[1].len == 0) {
+        return "takes an empty value";
+    }
+
+    escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
+            value[1].len);
+
+    jlcf->success.len = value[1].len + escape + sizeof("\"\"") - 1;
+
+    p = ngx_palloc(cf->pool, jlcf->success.len);
+    if (p == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    jlcf->success.data = p;
+
+    *p++ = '"';
+
+    if (escape == 0) {
+        p = ngx_copy(p, value[1].data, value[1].len);
+
+    } else {
+        p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
+                value[1].len);
+    }
+
+    *p++ = '"';
+
+    if (p - jlcf->success.data != (ssize_t) jlcf->success.len) {
         return " sees buffer error";
     }
 

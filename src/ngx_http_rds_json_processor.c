@@ -194,7 +194,7 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
         conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
         if (conf->root.len) {
-            rc = ngx_http_rds_json_output_props_begin(r, ctx, conf);
+            rc = ngx_http_rds_json_output_props(r, ctx, conf);
 
             dd("after output literal");
 
