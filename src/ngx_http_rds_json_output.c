@@ -172,6 +172,7 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
         if (escape == 0) {
             last = ngx_copy(last, header->errstr.data,
                     header->errstr.len);
+
         } else {
             last = (u_char *) ngx_http_rds_json_escape_json_str(last,
                     header->errstr.data, header->errstr.len);
@@ -212,6 +213,38 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
 
 ngx_int_t
+ngx_http_rds_json_output_props_begin(ngx_http_request_t *r,
+        ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_conf_t *conf)
+{
+    size_t                               size;
+    u_char                              *pos, *last;
+
+    size = sizeof("{:") - 1 + conf->root.len;
+
+    pos = ngx_http_rds_json_request_mem(r, ctx, size);
+    if (pos == NULL) {
+        return NGX_ERROR;
+    }
+
+    last = pos;
+
+    *last++ = '{';
+    last = ngx_copy(last, conf->root.data, conf->root.len);
+    *last++ = ':';
+
+    if (last - pos != (ssize_t) size) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                "rds_json: output props begin: buffer error: %O != %uz",
+                (off_t) (last - pos), size);
+
+        return NGX_ERROR;
+    }
+
+    return ngx_http_rds_json_submit_mem(r, ctx, size, 0);
+}
+
+
+ngx_int_t
 ngx_http_rds_json_output_cols(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx)
 {
@@ -248,7 +281,6 @@ ngx_http_rds_json_output_cols(ngx_http_request_t *r,
     }
 
     last = pos;
-
 
     *last++ = '[';
 

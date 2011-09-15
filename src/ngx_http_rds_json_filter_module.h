@@ -37,11 +37,13 @@ typedef struct {
     ngx_flag_t                       enabled;
     ngx_uint_t                       format;
     ngx_str_t                        content_type;
-
-    ngx_str_t                        errcode;
-    ngx_http_complex_value_t        *errstr;
+    ngx_str_t                        root;
 
     size_t                           buf_size;
+
+    /* for rds_json_ret */
+    ngx_str_t                        errcode;
+    ngx_http_complex_value_t        *errstr;
 } ngx_http_rds_json_conf_t;
 
 

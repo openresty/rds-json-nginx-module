@@ -191,16 +191,26 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 
         dd("before output literal");
 
+        conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
+
+        if (conf->root.len) {
+            rc = ngx_http_rds_json_output_props_begin(r, ctx, conf);
+
+            dd("after output literal");
+
+            if (rc == NGX_ERROR || rc > NGX_OK) {
+                return rc;
+            }
+        }
+
         rc = ngx_http_rds_json_output_literal(r, ctx,
                 (u_char *)"[", sizeof("[") - 1, 0 /* last buf */);
 
         dd("after output literal");
 
-        if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+        if (rc == NGX_ERROR || rc > NGX_OK) {
             return rc;
         }
-
-        conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
         if (conf->format == json_format_compact) {
             rc = ngx_http_rds_json_output_cols(r, ctx);
@@ -231,6 +241,8 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 {
     ngx_buf_t                   *b;
     ngx_int_t                    rc;
+
+    ngx_http_rds_json_conf_t        *conf;
 
     if (in == NULL) {
         return NGX_OK;
@@ -278,8 +290,16 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
             return NGX_ERROR;
         }
 
-        rc = ngx_http_rds_json_output_literal(r, ctx,
-                (u_char *)"]", sizeof("]") - 1, 1 /* last buf*/);
+        conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
+
+        if (conf->root.len) {
+            rc = ngx_http_rds_json_output_literal(r, ctx,
+                    (u_char *)"]}", sizeof("]}") - 1, 1 /* last buf*/);
+
+        } else {
+            rc = ngx_http_rds_json_output_literal(r, ctx,
+                    (u_char *)"]", sizeof("]") - 1, 1 /* last buf*/);
+        }
 
         if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
             return rc;
