@@ -304,3 +304,68 @@ GET /mysql
 --- response_body chomp
 {"suc":true,"foo":"bar\"","\\bar":"\"baz\"\\","rows":[["id","name"],[2,null],[3,"bob"]]}
 
+
+
+=== TEST 16: rds_json_ret with success property
+--- http_config eval: $::http_config
+--- config
+    location /ret {
+        rds_json_success_property ret;
+
+        rds_json_ret 400 'Non zero ret';
+    }
+--- request
+GET /ret
+--- response_body chomp
+{"errstr":"Non zero ret","ret":false,"errcode":400}
+
+
+
+=== TEST 17: rds_json_ret with user property
+--- http_config eval: $::http_config
+--- config
+    location /ret {
+        set $city 'beijing';
+        rds_json_user_property city $city;
+        rds_json_ret 400 'Non zero ret';
+    }
+--- request
+GET /ret
+--- response_body chomp
+{"errstr":"Non zero ret","city":"beijing","errcode":400}
+
+
+
+=== TEST 18: rds_json_ret with property
+--- http_config eval: $::http_config
+--- config
+    location /ret {
+        rds_json_success_property ret;
+
+        set $city 'beijing';
+        rds_json_user_property city $city;
+
+        rds_json_ret 400 'Non zero ret';
+    }
+--- request
+GET /ret
+--- response_body chomp
+{"errstr":"Non zero ret","ret":false,"city":"beijing","errcode":400}
+
+
+
+=== TEST 19: rds_json_ret when errcode equal 0
+--- http_config eval: $::http_config
+--- config
+    location /ret {
+        rds_json_success_property ret;
+
+        set $city 'beijing';
+        rds_json_user_property city $city;
+
+        rds_json_ret 0 'Zero errcode';
+    }
+--- request
+GET /ret
+--- response_body chomp
+{"errstr":"Zero errcode","ret":true,"city":"beijing","errcode":0}
