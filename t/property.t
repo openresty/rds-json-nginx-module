@@ -370,3 +370,19 @@ GET /ret
 --- response_body chomp
 {"errcode":0,"errstr":"Zero errcode","ret":true,"city":"beijing"}
 
+
+
+=== TEST 20: rds_json_ret with multiple user properties
+--- http_config eval: $::http_config
+--- config
+    location /ret {
+        set $city 'beijing';
+        rds_json_user_property city $city;
+        rds_json_user_property '"hi"' '"hello\n"';
+        rds_json_ret 400 'Non zero ret';
+    }
+--- request
+GET /ret
+--- response_body chomp
+{"errcode":400,"errstr":"Non zero ret","city":"beijing","\"hi\"":"\"hello\n\""}
+
