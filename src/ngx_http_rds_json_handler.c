@@ -33,8 +33,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     /* calculate the buffer size */
 
-    len = sizeof("{") - 1
-        + sizeof("\"errcode\":") - 1
+    len = sizeof("{\"errcode\":") - 1
         + conf->errcode.len
         + sizeof("}") - 1
         ;
@@ -111,8 +110,11 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     *b->last++ = '{';
 
+    b->last = ngx_copy_literal(b->last, "\"errcode\":");
+    b->last = ngx_copy(b->last, conf->errcode.data, conf->errcode.len);
+
     if (errstr.len) {
-        b->last = ngx_copy_literal(b->last, "\"errstr\":\"");
+        b->last = ngx_copy_literal(b->last, ",\"errstr\":\"");
 
         if (escape == 0) {
             b->last = ngx_copy(b->last, errstr.data, errstr.len);
@@ -122,22 +124,23 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
         }
 
         *b->last++ = '"';
-        *b->last++ = ',';
     }
 
     if (conf->success.len) {
+        *b->last++ = ',';
         b->last = ngx_copy(b->last, conf->success.data, conf->success.len);
 
         if (ngx_atoi(conf->errcode.data, conf->errcode.len) == 0) {
-            b->last = ngx_copy_literal(b->last, ":true,");
+            b->last = ngx_copy_literal(b->last, ":true");
 
         } else {
-            b->last = ngx_copy_literal(b->last, ":false,");
+            b->last = ngx_copy_literal(b->last, ":false");
         }
     }
 
     if (conf->user_props) {
         for (i = 0; i < conf->user_props->nelts; i++) {
+            *b->last++ = ',';
             b->last = ngx_copy(b->last, prop[i].key.data, prop[i].key.len);
             *b->last++ = ':';
             *b->last++ = '"';
@@ -151,12 +154,8 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
             }
 
             *b->last++ = '"';
-            *b->last++ = ',';
         }
     }
-
-    b->last = ngx_copy_literal(b->last, "\"errcode\":");
-    b->last = ngx_copy(b->last, conf->errcode.data, conf->errcode.len);
 
     *b->last++ = '}';
 

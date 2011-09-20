@@ -317,7 +317,7 @@ GET /mysql
 --- request
 GET /ret
 --- response_body chomp
-{"errstr":"Non zero ret","ret":false,"errcode":400}
+{"errcode":400,"errstr":"Non zero ret","ret":false}
 
 
 
@@ -332,7 +332,7 @@ GET /ret
 --- request
 GET /ret
 --- response_body chomp
-{"errstr":"Non zero ret","city":"beijing","errcode":400}
+{"errcode":400,"errstr":"Non zero ret","city":"beijing"}
 
 
 
@@ -350,7 +350,7 @@ GET /ret
 --- request
 GET /ret
 --- response_body chomp
-{"errstr":"Non zero ret","ret":false,"city":"beijing","errcode":400}
+{"errcode":400,"errstr":"Non zero ret","ret":false,"city":"beijing"}
 
 
 
@@ -368,4 +368,5 @@ GET /ret
 --- request
 GET /ret
 --- response_body chomp
-{"errstr":"Zero errcode","ret":true,"city":"beijing","errcode":0}
+{"errcode":0,"errstr":"Zero errcode","ret":true,"city":"beijing"}
+
