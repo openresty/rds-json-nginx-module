@@ -11,6 +11,7 @@
 #include "ngx_http_rds_json_output.h"
 #include "ngx_http_rds_json_util.h"
 #include "resty_dbd_stream.h"
+#include <nginx.h>
 
 
 static u_char * ngx_http_rds_json_request_mem(ngx_http_request_t *r,
@@ -99,8 +100,13 @@ ngx_http_rds_json_output_bufs(ngx_http_request_t *r,
             return rc;
         }
 
+#if defined(nginx_version) && nginx_version >= 1001004
+        ngx_chain_update_chains(r->pool, &ctx->free_bufs, &ctx->busy_bufs, &ctx->out,
+                ctx->tag);
+#else
         ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out,
                 ctx->tag);
+#endif
 
         ctx->last_out = &ctx->out;
     }
