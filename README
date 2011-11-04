@@ -140,20 +140,20 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/ >), for
-    example, the version 1.0.5 (see nginx compatibility), and then build
+    example, the version 1.0.9 (see nginx compatibility), and then build
     the source with this module:
 
-        $ wget 'http://sysoev.ru/nginx/nginx-1.0.5.tar.gz'
-        $ tar -xzvf nginx-1.0.5.tar.gz
-        $ cd nginx-1.0.5/
+        wget 'http://sysoev.ru/nginx/nginx-1.0.9.tar.gz'
+        tar -xzvf nginx-1.0.9.tar.gz
+        cd nginx-1.0.9/
 
         # Here we assume you would install you nginx under /opt/nginx/.
-        $ ./configure --prefix=/opt/nginx \
+        ./configure --prefix=/opt/nginx \
             --add-module=/path/to/drizzle-nginx-module
             --add-module=/path/to/rds-json-nginx-module
 
-        $ make -j2
-        $ make install
+        make -j2
+        make install
 
     Download the latest version of the release tarball of this module from
     rds-json-nginx-module file list
@@ -164,7 +164,7 @@ Compatibility
 
     *   1.1.x (last tested: 1.1.5)
 
-    *   1.0.x (last tested: 1.0.8)
+    *   1.0.x (last tested: 1.0.9)
 
     *   0.9.x (last tested: 0.9.4)
 
