@@ -36,7 +36,7 @@ cd nginx-$version/ || exit 1
 if [[ "$BUILD_CLEAN" -eq 1 || ! -f Makefile || "$root/config" -nt Makefile || "$root/util/build.sh" -nt Makefile ]]; then
     ./configure --prefix=$target \
           --with-cc-opt="-O1" \
-            --with-ld-opt="-Wl,-rpath,/opt/drizzle/lib" \
+            --with-ld-opt="-Wl,-rpath,/opt/drizzle/lib:/opt/pg9/lib" \
             --without-mail_pop3_module \
             --without-mail_imap_module \
             --without-mail_smtp_module \

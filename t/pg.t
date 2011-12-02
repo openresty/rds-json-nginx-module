@@ -7,6 +7,7 @@ repeat_each(2);
 
 plan tests => repeat_each() * (2 * blocks() + 1);
 
+$ENV{TEST_NGINX_POSTGRESQL_HOST} ||= '127.0.0.1';
 $ENV{TEST_NGINX_POSTGRESQL_PORT} ||= 5432;
 
 no_long_string();
@@ -18,7 +19,7 @@ __DATA__
 === TEST 1: bool blob field (keepalive off)
 --- http_config
     upstream backend {
-        postgres_server     127.0.0.1:$TEST_NGINX_POSTGRESQL_PORT
+        postgres_server     $TEST_NGINX_POSTGRESQL_HOST:$TEST_NGINX_POSTGRESQL_PORT
                             dbname=ngx_test user=ngx_test password=ngx_test;
         postgres_keepalive  off;
     }
@@ -62,7 +63,7 @@ GET /test
 === TEST 2: bool blob field (keepalive on)
 --- http_config
     upstream backend {
-        postgres_server     127.0.0.1:$TEST_NGINX_POSTGRESQL_PORT
+        postgres_server     $TEST_NGINX_POSTGRESQL_HOST:$TEST_NGINX_POSTGRESQL_PORT
                             dbname=ngx_test user=ngx_test password=ngx_test;
     }
 --- config
@@ -105,7 +106,7 @@ GET /test
 === TEST 3: sanity (github issue #2)
 --- http_config
     upstream backend {
-        postgres_server     127.0.0.1:$TEST_NGINX_POSTGRESQL_PORT
+        postgres_server     $TEST_NGINX_POSTGRESQL_HOST:$TEST_NGINX_POSTGRESQL_PORT
                             dbname=ngx_test user=ngx_test password=ngx_test;
     }
 --- config
