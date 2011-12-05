@@ -103,8 +103,8 @@ ngx_http_rds_json_output_bufs(ngx_http_request_t *r,
         }
 
 #if defined(nginx_version) && nginx_version >= 1001004
-        ngx_chain_update_chains(r->pool, &ctx->free_bufs, &ctx->busy_bufs, &ctx->out,
-                ctx->tag);
+        ngx_chain_update_chains(r->pool, &ctx->free_bufs, &ctx->busy_bufs,
+                &ctx->out, ctx->tag);
 #else
         ngx_chain_update_chains(&ctx->free_bufs, &ctx->busy_bufs, &ctx->out,
                 ctx->tag);

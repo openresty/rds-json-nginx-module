@@ -174,7 +174,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
         ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
 
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "rds json: skipped due to bad status: %ui", r->headers_out.status);
+                "rds json: skipped due to bad status: %ui",
+                r->headers_out.status);
 
         return ngx_http_rds_json_next_header_filter(r);
     }
@@ -185,7 +186,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     if (!conf->enabled) {
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "rds json: skipped because not enabled in the current location");
+                "rds json: skipped because not enabled in the current "
+                "location");
 
         return ngx_http_rds_json_next_header_filter(r);
     }
