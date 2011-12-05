@@ -6,9 +6,9 @@ use Test::Nginx::Socket;
 #repeat_each(10);
 no_shuffle();
 
-repeat_each(1);
+repeat_each(2);
 
-plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
+plan tests => repeat_each() * (2 * blocks() + 7);
 
 $ENV{TEST_NGINX_MYSQL_HOST} ||= '127.0.0.1';
 $ENV{TEST_NGINX_MYSQL_PORT} ||= 3306;
@@ -438,4 +438,22 @@ GET /mysql
 --- response_body chop
 {"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
 --- SKIP
+
+
+
+=== TEST 17: bad MIME type
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        default_type "text/css";
+        echo hello;
+        rds_json on;
+    }
+--- request
+GET /mysql
+--- response_headers
+Content-Type: text/css
+--- response_body
+hello
+--- timeout: 15
 

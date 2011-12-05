@@ -4,7 +4,9 @@
  */
 
 
+#ifndef DDEBUG
 #define DDEBUG 0
+#endif
 #include "ddebug.h"
 
 #include "ngx_http_rds_json_filter_module.h"
@@ -171,7 +173,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
     {
         ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
 
-        dd("status is not OK: %d, skipping", (int) r->headers_out.status);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                "rds json: skipped due to bad status: %ui", r->headers_out.status);
 
         return ngx_http_rds_json_next_header_filter(r);
     }
@@ -180,11 +183,18 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
-    if ( ! conf->enabled) {
+    if (!conf->enabled) {
+        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                "rds json: skipped because not enabled in the current location");
+
         return ngx_http_rds_json_next_header_filter(r);
     }
 
     if (ngx_http_rds_json_test_content_type(r) != NGX_OK) {
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                "rds json: skipped due to unmatched Content-Type response "
+                "header \"%V\"", &r->headers_out.content_type);
+
         return ngx_http_rds_json_next_header_filter(r);
     }
 
@@ -226,6 +236,9 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     r->filter_need_in_memory = 1;
 
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+            "rds json header filter postponed header sending");
+
     /* we do postpone the header sending to the body filter */
     return NGX_OK;
 }
@@ -246,6 +259,9 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     if (ctx == NULL) {
         return ngx_http_rds_json_next_body_filter(r, in);
     }
+
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+            "rds json body filter postponed header sending");
 
     switch (ctx->state) {
     case state_expect_header:
@@ -270,9 +286,10 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     case state_done:
 
-        /* mark the remaining bufs as consumed */
+        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                "rds json body filter discarding unexpected trailing buffers");
 
-        dd("discarding bufs");
+        /* mark the remaining bufs as consumed */
 
         ngx_http_rds_json_discard_bufs(r->pool, in);
 
@@ -302,7 +319,8 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
             r->headers_out.status = rc;
 
-            dd("sending ERROR headers");
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                    "rds json body filter sending error page headers");
 
             ngx_http_rds_json_next_header_filter(r);
             ngx_http_send_special(r, NGX_HTTP_LAST);
