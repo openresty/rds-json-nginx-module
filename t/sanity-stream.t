@@ -6,7 +6,7 @@ use Test::Nginx::Socket;
 #repeat_each(10);
 no_shuffle();
 
-repeat_each(1);
+repeat_each(2);
 
 plan tests => repeat_each() * 2 * blocks() + 2 * repeat_each() * 3;
 

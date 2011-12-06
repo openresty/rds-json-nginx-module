@@ -345,6 +345,8 @@ ngx_http_rds_json_filter_init(ngx_conf_t *cf)
     dd("setting next filter");
 
     if (ngx_http_rds_json_filter_used) {
+        dd("register filters");
+
         ngx_http_rds_json_next_header_filter = ngx_http_top_header_filter;
         ngx_http_top_header_filter = ngx_http_rds_json_header_filter;
 
@@ -676,6 +678,8 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
 static char *
 ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
+    dd("set filter used to 1");
+
     ngx_http_rds_json_filter_used = 1;
 
     return ngx_conf_set_flag_slot(cf, cmd, conf);
@@ -684,6 +688,8 @@ ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 static ngx_int_t ngx_http_rds_json_pre_config(ngx_conf_t *cf)
 {
+    dd("set filter used to 0");
+
     ngx_http_rds_json_filter_used = 0;
 
     return NGX_OK;

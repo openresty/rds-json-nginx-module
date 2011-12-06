@@ -21,6 +21,7 @@ our $http_config = <<'_EOC_';
 _EOC_
 
 #no_long_string();
+#master_on();
 
 run_tests();
 
@@ -34,7 +35,7 @@ __DATA__
     location /mysql {
         drizzle_pass backend;
         #drizzle_dbname $dbname;
-        drizzle_query 'select * from cats';
+        drizzle_query 'select * from cats order by id';
         rds_json on;
     }
 --- request
