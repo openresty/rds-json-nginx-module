@@ -48,6 +48,9 @@ typedef struct {
                                                * key */
     ngx_array_t                     *user_props; /* rds_json_user_property */
 
+    ngx_str_t                        errcode_key;
+    ngx_str_t                        errstr_key;
+
     size_t                           buf_size;
 
     /* for rds_json_ret */

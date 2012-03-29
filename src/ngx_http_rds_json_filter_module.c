@@ -20,6 +20,9 @@
 
 #define ngx_http_rds_json_content_type  "application/json"
 
+#define ngx_http_rds_json_errcode_default_key  "\"errcode\""
+#define ngx_http_rds_json_errstr_default_key   "\"errstr\""
+
 
 static unsigned  ngx_http_rds_json_filter_used = 0;
 
@@ -47,6 +50,10 @@ static char * ngx_http_rds_json_success_property(ngx_conf_t *cf,
         ngx_command_t *cmd, void *conf);
 static char * ngx_http_rds_json_user_property(ngx_conf_t *cf,
         ngx_command_t *cmd, void *conf);
+static char * ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf);
+static char * ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf);
 static char * ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t ngx_http_rds_json_pre_config(ngx_conf_t *cf);
 
@@ -85,6 +92,24 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
           |NGX_CONF_TAKE2,
       ngx_http_rds_json_user_property,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("rds_json_errcode_key"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
+          |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_TAKE1,
+      ngx_http_rds_json_errcode_key,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("rds_json_errstr_key"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF
+          |NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
+          |NGX_CONF_TAKE1,
+      ngx_http_rds_json_errstr_key,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -416,6 +441,12 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
         ngx_str_set(&conf->root, "\"data\"");
     }
 
+    ngx_conf_merge_str_value(conf->errcode_key, prev->errcode_key,
+            "\"errcode\"");
+
+    ngx_conf_merge_str_value(conf->errstr_key, prev->errstr_key,
+            "\"errstr\"");
+
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
             ngx_http_rds_json_content_type);
 
@@ -669,6 +700,108 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
 
     if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
         return NGX_CONF_ERROR;
+    }
+
+    return NGX_CONF_OK;
+}
+
+
+static char *
+ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf)
+{
+    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_str_t                           *value;
+    uintptr_t                            escape;
+    u_char                              *p;
+
+    value = cf->args->elts;
+
+    if (jlcf->root.len) {
+        return "is duplicate";
+    }
+
+    if (value[1].len == 0) {
+        return "takes an empty value";
+    }
+
+    escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
+            value[1].len);
+
+    jlcf->errcode_key.len = value[1].len + escape + sizeof("\"\"") - 1;
+
+    p = ngx_palloc(cf->pool, jlcf->errcode_key.len);
+    if (p == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    jlcf->errcode_key.data = p;
+
+    *p++ = '"';
+
+    if (escape == 0) {
+        p = ngx_copy(p, value[1].data, value[1].len);
+
+    } else {
+        p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
+                value[1].len);
+    }
+
+    *p++ = '"';
+
+    if (p - jlcf->errcode_key.data != (ssize_t) jlcf->errcode_key.len) {
+        return "sees buffer error";
+    }
+
+    return NGX_CONF_OK;
+}
+
+
+static char *
+ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
+        void *conf)
+{
+    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_str_t                           *value;
+    uintptr_t                            escape;
+    u_char                              *p;
+
+    value = cf->args->elts;
+
+    if (jlcf->errstr_key.len) {
+        return "is duplicate";
+    }
+
+    if (value[1].len == 0) {
+        return "takes an empty value";
+    }
+
+    escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
+            value[1].len);
+
+    jlcf->errstr_key.len = value[1].len + escape + sizeof("\"\"") - 1;
+
+    p = ngx_palloc(cf->pool, jlcf->errstr_key.len);
+    if (p == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    jlcf->errstr_key.data = p;
+
+    *p++ = '"';
+
+    if (escape == 0) {
+        p = ngx_copy(p, value[1].data, value[1].len);
+
+    } else {
+        p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
+                value[1].len);
+    }
+
+    *p++ = '"';
+
+    if (p - jlcf->errstr_key.data != (ssize_t) jlcf->errstr_key.len) {
+        return "sees buffer error";
     }
 
     return NGX_CONF_OK;

@@ -35,7 +35,9 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     /* calculate the buffer size */
 
-    len = sizeof("{\"errcode\":") - 1
+    len = sizeof("{") - 1
+        + conf->errcode_key.len
+        + sizeof(":") - 1
         + conf->errcode.len
         + sizeof("}") - 1
         ;
@@ -44,9 +46,11 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
         escape = ngx_http_rds_json_escape_json_str(NULL,
                 errstr.data, errstr.len);
 
-        len += sizeof("\"errstr\":\"") - 1
+        len += sizeof(",") - 1
+             + conf->errstr_key.len
+             + sizeof(":\"") - 1
              + errstr.len + escape
-             + sizeof("\",") - 1
+             + sizeof("\"") - 1
              ;
     }
 
@@ -112,11 +116,16 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     *b->last++ = '{';
 
-    b->last = ngx_copy_literal(b->last, "\"errcode\":");
+    b->last = ngx_copy(b->last, conf->errcode_key.data, conf->errcode_key.len);
+    *b->last++ = ':';
     b->last = ngx_copy(b->last, conf->errcode.data, conf->errcode.len);
 
     if (errstr.len) {
-        b->last = ngx_copy_literal(b->last, ",\"errstr\":\"");
+        *b->last++ = ',';
+        b->last = ngx_copy(b->last,
+                conf->errstr_key.data, conf->errstr_key.len);
+        *b->last++ = ':';
+        *b->last++ = '"';
 
         if (escape == 0) {
             b->last = ngx_copy(b->last, errstr.data, errstr.len);
