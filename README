@@ -119,6 +119,18 @@ Directives
         Both of the <key> and <value> arguments will be automatically
         quoted according to JSON strings' notation.
 
+    rds_json_errcode_key
+        syntax: rds_json_errcode_key <key>
+        default: errcode
+
+        Specify the errcode key name used in the JSON output
+
+    rds_json_errstr_key
+        syntax: rds_json_errstr_key <key>
+        default: errstr
+
+        Specify the errstr key name used in the JSON output
+
     rds_json_ret
         syntax: rds_json_ret <error-code> <descrption>
         default: no
