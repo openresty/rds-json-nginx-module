@@ -11,6 +11,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 #include <nginx.h>
+#include <stdint.h>
 
 
 #ifndef NGX_HTTP_RESET_CONTENT
