@@ -215,7 +215,7 @@ GET /mysql
 GET /mysql
 --- response_body chop
 {"success":true,"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
-
+--- ONLY
 
 
 === TEST 12: update (user property)
@@ -535,4 +535,27 @@ GET /ret
 GET /mysql
 --- response_body chop
 {"name":"Jimmy\"","age":"32","\"code\"":0,"\"str\"":"Rows matched: 1  Changed: 0  Warnings: 0"}
+
+
+=== TEST 30: select - custom errstr_key
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        drizzle_query "select 'aaa' as a, 'bbb' as b";
+        rds_json on;
+        rds_json_errcode_key "\"code\"";
+        rds_json_errstr_key "\"str\"";
+
+        rds_json_root data;
+
+        set $name 'Jimmy"';
+        set $age 32;
+        rds_json_user_property name $name;
+        rds_json_user_property age $age;
+    }
+--- request
+GET /mysql
+--- response_body chop
+{"name":"Jimmy\"","age":"32", "data": [ ] }
 

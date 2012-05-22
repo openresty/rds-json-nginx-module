@@ -137,10 +137,29 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
     /* calculate the buffer size */
 
-    size = sizeof("{\"errcode\":") - 1
-         + ngx_get_num_size(header->std_errcode)
-         + sizeof("}") - 1
-         ;
+    size = sizeof("{") - 1
+        + conf->errcode_key.len
+        + sizeof(":") - 1
+-       + ngx_get_num_size(header->std_errcode)
+        + sizeof("}") - 1
+        ;
+
+    if (header->errstr.len) {
+        escape = ngx_http_rds_json_escape_json_str(NULL, header->errstr.data,
+                header->errstr.len);
+
+        size += sizeof(",") - 1
+             + conf->errstr_key.len
+             + sizeof(":") - 1
+             + sizeof("\"") - 1
+             + header->errstr.len
+             + escape
+             + sizeof("\"") - 1
+             ;
+
+    } else {
+        escape = (uintptr_t) 0;
+    }
 
     if (conf->success.len) {
         size += conf->success.len + sizeof(":,") - 1;
@@ -180,18 +199,6 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
         }
     }
 
-    if (header->errstr.len) {
-        escape = ngx_http_rds_json_escape_json_str(NULL, header->errstr.data,
-                header->errstr.len);
-
-        size += sizeof(",\"errstr\":\"") - 1
-              + header->errstr.len + escape
-              + sizeof("\"") - 1
-              ;
-    } else {
-        escape = (uintptr_t) 0;
-    }
-
     if (header->insert_id) {
         size += sizeof(",\"insert_id\":") - 1
               + ngx_get_num_size(header->insert_id)
@@ -216,6 +223,31 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
     /* fill up the buffer */
 
     *last++ = '{';
+    last = ngx_copy(last, conf->errcode_key.data, conf->errcode_key.len);
+    *last++ = ':';
+
+    last = ngx_snprintf(last, NGX_UINT16_LEN, "%uD",
+            (uint32_t) header->std_errcode);
+
+    if (header->errstr.len) {
+        *last++ = ',';
+        last = ngx_copy(last,
+                conf->errstr_key.data, conf->errstr_key.len);
+        *last++ = ':';
+        *last++ = '"';
+
+        if (escape == 0) {
+            last = ngx_copy(last, header->errstr.data,
+                    header->errstr.len);
+
+        } else {
+            last = (u_char *) ngx_http_rds_json_escape_json_str(last,
+                    header->errstr.data, header->errstr.len);
+        }
+
+        *last++ = '"';
+    }
+
 
     if (conf->success.len) {
         last = ngx_copy(last, conf->success.data, conf->success.len);
@@ -245,26 +277,6 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
             *last++ = '"';
             *last++ = ',';
         }
-    }
-
-    last = ngx_copy_literal(last, "\"errcode\":");
-
-    last = ngx_snprintf(last, NGX_UINT16_LEN, "%uD",
-            (uint32_t) header->std_errcode);
-
-    if (header->errstr.len) {
-        last = ngx_copy_literal(last, ",\"errstr\":\"");
-
-        if (escape == 0) {
-            last = ngx_copy(last, header->errstr.data,
-                    header->errstr.len);
-
-        } else {
-            last = (u_char *) ngx_http_rds_json_escape_json_str(last,
-                    header->errstr.data, header->errstr.len);
-        }
-
-        *last++ = '"';
     }
 
     if (header->insert_id) {

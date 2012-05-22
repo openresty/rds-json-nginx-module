@@ -35,18 +35,24 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     /* calculate the buffer size */
 
-    len = sizeof("{:}") - 1
+    len = sizeof("{") - 1
         + conf->errcode_key.len
+        + sizeof(":") - 1
         + conf->errcode.len
+        + sizeof("}") - 1
         ;
 
     if (errstr.len) {
         escape = ngx_http_rds_json_escape_json_str(NULL,
                 errstr.data, errstr.len);
 
-        len += sizeof(",:\"\"") - 1
+        len += sizeof(",") - 1
              + conf->errstr_key.len
-             + errstr.len + escape
+             + sizeof(":") - 1
+             + sizeof("\"") - 1
+             + errstr.len
+             + escape
+             + sizeof("\"") - 1
              ;
     }
 
