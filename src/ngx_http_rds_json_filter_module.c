@@ -427,11 +427,9 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_uint_value(conf->format, prev->format, json_format_normal);
 
-    ngx_conf_merge_str_value(conf->root, prev->root,
-            "");
+    ngx_conf_merge_str_value(conf->root, prev->root, "");
 
-    ngx_conf_merge_str_value(conf->success, prev->success,
-            "");
+    ngx_conf_merge_str_value(conf->success, prev->success, "");
 
     if (conf->user_props == NULL) {
         conf->user_props = prev->user_props;
@@ -442,16 +440,16 @@ ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
     }
 
     ngx_conf_merge_str_value(conf->errcode_key, prev->errcode_key,
-            "\"errcode\"");
+                             "\"errcode\"");
 
     ngx_conf_merge_str_value(conf->errstr_key, prev->errstr_key,
-            "\"errstr\"");
+                             "\"errstr\"");
 
     ngx_conf_merge_str_value(conf->content_type, prev->content_type,
-            ngx_http_rds_json_content_type);
+                             ngx_http_rds_json_content_type);
 
     ngx_conf_merge_size_value(conf->buf_size, prev->buf_size,
-            (size_t) ngx_pagesize);
+                              (size_t) ngx_pagesize);
 
     return NGX_CONF_OK;
 }
@@ -717,7 +715,7 @@ ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
 
     value = cf->args->elts;
 
-    if (jlcf->root.len) {
+    if (jlcf->errcode_key.len) {
         return "is duplicate";
     }
 
@@ -744,7 +742,7 @@ ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
 
     } else {
         p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
-                value[1].len);
+                                                         value[1].len);
     }
 
     *p++ = '"';
@@ -777,7 +775,7 @@ ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
     }
 
     escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
-            value[1].len);
+                                               value[1].len);
 
     jlcf->errstr_key.len = value[1].len + escape + sizeof("\"\"") - 1;
 
@@ -795,7 +793,7 @@ ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
 
     } else {
         p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
-                value[1].len);
+                                                         value[1].len);
     }
 
     *p++ = '"';

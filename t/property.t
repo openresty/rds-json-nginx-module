@@ -387,3 +387,152 @@ GET /ret
 --- response_body chomp
 {"errcode":400,"errstr":"Non zero ret","city":"beijing","\"hi\"":"\"hello\n\""}
 
+
+
+=== TEST 21: location internal rewrite
+--- config
+    location @err403 {
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+
+    location /foo {
+        error_page 403 = @err403;
+        return 403;
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"errcode":403,"errstr":"Forbidden","ret":false}
+
+
+
+=== TEST 22: rds_json_errcode_key
+--- config
+    location /foo {
+        rds_json_errcode_key "ecode";
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"ecode":403,"errstr":"Forbidden","ret":false}
+
+
+
+=== TEST 23: rds_json_errcode_key
+--- config
+    rds_json_errcode_key "ecoderoot";
+
+    location /foo {
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"ecoderoot":403,"errstr":"Forbidden","ret":false}
+
+
+
+=== TEST 24: rds_json_errcode_key
+--- config
+    rds_json_errcode_key "ecoderoot";
+
+    location /foo {
+        rds_json_errcode_key "ecode";
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"ecode":403,"errstr":"Forbidden","ret":false}
+
+
+
+=== TEST 25: rds_json_errstr_key
+--- config
+    rds_json_errstr_key "msg";
+
+    location /foo {
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"errcode":403,"msg":"Forbidden","ret":false}
+
+
+
+=== TEST 26: rds_json_errstr_key
+--- config
+    rds_json_errstr_key "msg";
+
+    location /foo {
+        rds_json_errstr_key "msg2";
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"errcode":403,"msg2":"Forbidden","ret":false}
+
+
+
+=== TEST 27: rds_json_errstr_key & rds_json_root
+--- config
+    rds_json_errstr_key "msg2";
+    rds_json_root rows;
+
+    location /foo {
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"errcode":403,"msg2":"Forbidden","ret":false}
+
+
+
+=== TEST 28: rds_json_errcode_key & rds_json_root
+--- config
+    rds_json_root rows;
+    rds_json_errcode_key "code";
+
+    location /foo {
+        rds_json_success_property ret;
+        rds_json_ret 403 "Forbidden";
+    }
+--- request
+    GET /foo
+--- response_body chop
+{"code":403,"errstr":"Forbidden","ret":false}
+
+
+
+=== TEST 29: update - custom errstr_key
+--- http_config eval: $::http_config
+--- config
+    location /mysql {
+        drizzle_pass backend;
+        #drizzle_dbname $dbname;
+        drizzle_query "update cats set name='bob' where name='bob'";
+        rds_json on;
+        rds_json_errcode_key "\"code\"";
+        rds_json_errstr_key "\"str\"";
+
+        set $name 'Jimmy"';
+        set $age 32;
+        rds_json_user_property name $name;
+        rds_json_user_property age $age;
+    }
+--- request
+GET /mysql
+--- response_body chop
+{"name":"Jimmy\"","age":"32","\"code\"":0,"\"str\"":"Rows matched: 1  Changed: 0  Warnings: 0"}
+
