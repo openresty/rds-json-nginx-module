@@ -215,7 +215,7 @@ GET /mysql
 GET /mysql
 --- response_body chop
 {"success":true,"errcode":0,"errstr":"Rows matched: 1  Changed: 0  Warnings: 0"}
---- ONLY
+
 
 
 === TEST 12: update (user property)
@@ -537,6 +537,7 @@ GET /mysql
 {"name":"Jimmy\"","age":"32","\"code\"":0,"\"str\"":"Rows matched: 1  Changed: 0  Warnings: 0"}
 
 
+
 === TEST 30: select - custom errstr_key
 --- http_config eval: $::http_config
 --- config
@@ -557,5 +558,4 @@ GET /mysql
 --- request
 GET /mysql
 --- response_body chop
-{"name":"Jimmy\"","age":"32", "data": [ ] }
-
+{"name":"Jimmy\"","age":"32","data":[{"a":"aaa","b":"bbb"}]}
