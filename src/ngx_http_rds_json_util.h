@@ -3,6 +3,9 @@
 
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include <nginx.h>
+#include <stdint.h>
+
 
 #ifndef NGX_UINT64_LEN
 #define NGX_UINT64_LEN (sizeof("18446744073709551615") - 1)

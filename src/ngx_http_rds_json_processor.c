@@ -8,8 +8,8 @@
 #endif
 #include "ddebug.h"
 
-#include "ngx_http_rds_json_processor.h"
 #include "ngx_http_rds_json_util.h"
+#include "ngx_http_rds_json_processor.h"
 #include "ngx_http_rds_json_output.h"
 #include "ngx_http_rds.h"
 #include "ngx_http_rds_utils.h"
