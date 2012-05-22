@@ -121,15 +121,15 @@ Directives
 
     rds_json_errcode_key
         syntax: rds_json_errcode_key <key>
-        default: errcode
+        default: rds_json_errcode_key errcode
 
-        Specify the errcode key name used in the JSON output
+        Specify the errcode key name used in the JSON output.
 
     rds_json_errstr_key
         syntax: rds_json_errstr_key <key>
-        default: errstr
+        default: rds_json_errstr_key errstr
 
-        Specify the errstr key name used in the JSON output
+        Specify the errstr key name used in the JSON output.
 
     rds_json_ret
         syntax: rds_json_ret <error-code> <descrption>
