@@ -30,7 +30,7 @@ ngx_int_t ngx_http_rds_json_output_field(ngx_http_request_t *r,
 ngx_int_t ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx, u_char *data, size_t len);
 ngx_int_t ngx_http_rds_json_output_props(ngx_http_request_t *r,
-        ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_conf_t *conf);
+        ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_loc_conf_t *conf);
 
 
 #endif /* NGX_HTTP_RDS_JSON_OUTPUT_H */

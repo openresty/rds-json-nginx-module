@@ -24,8 +24,6 @@
 #define ngx_http_rds_json_errstr_default_key   "\"errstr\""
 
 
-static unsigned  ngx_http_rds_json_filter_used = 0;
-
 static ngx_conf_enum_t  ngx_http_rds_json_formats[] = {
     { ngx_string("normal"), json_format_normal },
     { ngx_string("compact"), json_format_compact },
@@ -38,10 +36,11 @@ ngx_http_output_header_filter_pt  ngx_http_rds_json_next_header_filter;
 ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
 
 
+static void * ngx_http_rds_json_create_main_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf);
-static void *ngx_http_rds_json_create_conf(ngx_conf_t *cf);
-static char *ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent,
+static void *ngx_http_rds_json_create_loc_conf(ngx_conf_t *cf);
+static char *ngx_http_rds_json_merge_loc_conf(ngx_conf_t *cf, void *parent,
     void *child);
 static ngx_int_t ngx_http_rds_json_filter_init(ngx_conf_t *cf);
 static char * ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
@@ -55,7 +54,6 @@ static char * ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
 static char * ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf);
 static char * ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-static ngx_int_t ngx_http_rds_json_pre_config(ngx_conf_t *cf);
 
 
 static ngx_command_t  ngx_http_rds_json_commands[] = {
@@ -66,7 +64,7 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_CONF_FLAG,
       ngx_http_rds_json,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, enabled),
+      offsetof(ngx_http_rds_json_loc_conf_t, enabled),
       NULL },
 
     { ngx_string("rds_json_root"),
@@ -120,7 +118,7 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_CONF_TAKE1,
       ngx_conf_set_enum_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, format),
+      offsetof(ngx_http_rds_json_loc_conf_t, format),
       &ngx_http_rds_json_formats },
 
     { ngx_string("rds_json_content_type"),
@@ -129,7 +127,7 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_CONF_TAKE1,
       ngx_conf_set_str_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, content_type),
+      offsetof(ngx_http_rds_json_loc_conf_t, content_type),
       NULL },
 
     { ngx_string("rds_json_ret"),
@@ -144,7 +142,7 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
           |NGX_CONF_TAKE1,
       ngx_conf_set_size_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_rds_json_conf_t, buf_size),
+      offsetof(ngx_http_rds_json_loc_conf_t, buf_size),
       NULL },
 
       ngx_null_command
@@ -152,17 +150,17 @@ static ngx_command_t  ngx_http_rds_json_commands[] = {
 
 
 static ngx_http_module_t  ngx_http_rds_json_filter_module_ctx = {
-    ngx_http_rds_json_pre_config,          /* preconfiguration */
+    NULL,                                  /* preconfiguration */
     ngx_http_rds_json_filter_init,         /* postconfiguration */
 
-    NULL,                                  /* create main configuration */
+    ngx_http_rds_json_create_main_conf,    /* create main configuration */
     NULL,                                  /* init main configuration */
 
     NULL,                                  /* create server configuration */
     NULL,                                  /* merge server configuration */
 
-    ngx_http_rds_json_create_conf,         /* create location configuration */
-    ngx_http_rds_json_merge_conf           /* merge location configuration */
+    ngx_http_rds_json_create_loc_conf,     /* create location configuration */
+    ngx_http_rds_json_merge_loc_conf       /* merge location configuration */
 };
 
 
@@ -185,12 +183,16 @@ ngx_module_t  ngx_http_rds_json_filter_module = {
 static ngx_int_t
 ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 {
-    ngx_http_rds_json_ctx_t   *ctx;
-    ngx_http_rds_json_conf_t  *conf;
+    ngx_http_rds_json_ctx_t         *ctx;
+    ngx_http_rds_json_loc_conf_t    *conf;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "rds json header filter, \"%V\"", &r->uri);
 
     /* XXX maybe we can generate stub JSON strings like
      * {"errcode":403,"error":"Permission denied"}
      * for HTTP error pages? */
+
     if ((r->headers_out.status < NGX_HTTP_OK)
         || (r->headers_out.status >= NGX_HTTP_SPECIAL_RESPONSE)
         || (r->headers_out.status == NGX_HTTP_NO_CONTENT)
@@ -276,6 +278,9 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
     ngx_http_rds_json_ctx_t    *ctx;
     ngx_int_t                   rc;
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                   "rds json body filter, \"%V\"", &r->uri);
 
     if (in == NULL || r->header_only) {
         return ngx_http_rds_json_next_body_filter(r, in);
@@ -367,9 +372,14 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 static ngx_int_t
 ngx_http_rds_json_filter_init(ngx_conf_t *cf)
 {
-    dd("setting next filter");
+    ngx_http_rds_json_main_conf_t     *rmcf;
 
-    if (ngx_http_rds_json_filter_used) {
+    rmcf = ngx_http_conf_get_module_main_conf(cf,
+                                              ngx_http_rds_json_filter_module);
+
+    dd("setting next filter: %d", (int) rmcf->requires_filters);
+
+    if (rmcf->requires_filters) {
         dd("register filters");
 
         ngx_http_rds_json_next_header_filter = ngx_http_top_header_filter;
@@ -384,11 +394,11 @@ ngx_http_rds_json_filter_init(ngx_conf_t *cf)
 
 
 static void *
-ngx_http_rds_json_create_conf(ngx_conf_t *cf)
+ngx_http_rds_json_create_loc_conf(ngx_conf_t *cf)
 {
-    ngx_http_rds_json_conf_t  *conf;
+    ngx_http_rds_json_loc_conf_t  *conf;
 
-    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_rds_json_conf_t));
+    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_rds_json_loc_conf_t));
     if (conf == NULL) {
         return NULL;
     }
@@ -418,10 +428,10 @@ ngx_http_rds_json_create_conf(ngx_conf_t *cf)
 
 
 static char *
-ngx_http_rds_json_merge_conf(ngx_conf_t *cf, void *parent, void *child)
+ngx_http_rds_json_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 {
-    ngx_http_rds_json_conf_t *prev = parent;
-    ngx_http_rds_json_conf_t *conf = child;
+    ngx_http_rds_json_loc_conf_t *prev = parent;
+    ngx_http_rds_json_loc_conf_t *conf = child;
 
     ngx_conf_merge_value(conf->enabled, prev->enabled, 0);
 
@@ -459,7 +469,7 @@ static char *
 ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf)
 {
-    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_http_core_loc_conf_t            *clcf;
     ngx_str_t                           *value;
     ngx_http_compile_complex_value_t     ccv;
@@ -528,7 +538,7 @@ static char *
 ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf)
 {
-    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
     uintptr_t                            escape;
     u_char                              *p;
@@ -579,7 +589,7 @@ static char *
 ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf)
 {
-    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
     uintptr_t                            escape;
     u_char                              *p;
@@ -630,7 +640,7 @@ static char *
 ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf)
 {
-    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
     ngx_http_rds_json_property_t        *prop;
     uintptr_t                            escape;
@@ -708,7 +718,7 @@ static char *
 ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf)
 {
-    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
     uintptr_t                            escape;
     u_char                              *p;
@@ -759,7 +769,7 @@ static char *
 ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
         void *conf)
 {
-    ngx_http_rds_json_conf_t            *jlcf = conf;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
     uintptr_t                            escape;
     u_char                              *p;
@@ -809,20 +819,33 @@ ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
 static char *
 ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
+    ngx_http_rds_json_main_conf_t     *rmcf;
+
+    rmcf = ngx_http_conf_get_module_main_conf(cf,
+                                              ngx_http_rds_json_filter_module);
+
     dd("set filter used to 1");
 
-    ngx_http_rds_json_filter_used = 1;
+    rmcf->requires_filters = 1;
 
     return ngx_conf_set_flag_slot(cf, cmd, conf);
 }
 
 
-static ngx_int_t ngx_http_rds_json_pre_config(ngx_conf_t *cf)
+static void *
+ngx_http_rds_json_create_main_conf(ngx_conf_t *cf)
 {
-    dd("set filter used to 0");
+    ngx_http_rds_json_main_conf_t    *rmcf;
 
-    ngx_http_rds_json_filter_used = 0;
+    rmcf = ngx_pcalloc(cf->pool, sizeof(ngx_http_rds_json_main_conf_t));
+    if (rmcf == NULL) {
+        return NULL;
+    }
 
-    return NGX_OK;
+    /* set by ngx_pcalloc:
+     *      rmcf->requires_filters = 0;
+     */
+
+    return rmcf;
 }
 

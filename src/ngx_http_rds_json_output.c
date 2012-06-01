@@ -131,7 +131,7 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
     uintptr_t               *escapes = NULL;
 
     ngx_http_rds_json_property_t        *prop = NULL;
-    ngx_http_rds_json_conf_t            *conf;
+    ngx_http_rds_json_loc_conf_t        *conf;
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
@@ -314,7 +314,7 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
 ngx_int_t
 ngx_http_rds_json_output_props(ngx_http_request_t *r,
-        ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_conf_t *conf)
+        ngx_http_rds_json_ctx_t *ctx, ngx_http_rds_json_loc_conf_t *conf)
 {
     size_t                   size;
     u_char                  *pos, *last;
@@ -480,7 +480,7 @@ ngx_http_rds_json_output_field(ngx_http_request_t *r,
     uintptr_t                            val_escape = 0;
     u_char                              *p;
     ngx_uint_t                           i;
-    ngx_http_rds_json_conf_t            *conf;
+    ngx_http_rds_json_loc_conf_t        *conf;
     ngx_uint_t                           format;
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
@@ -777,7 +777,7 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
     uintptr_t                        escape = 0;
     u_char                          *p;
     ngx_uint_t                       i;
-    ngx_http_rds_json_conf_t        *conf;
+    ngx_http_rds_json_loc_conf_t    *conf;
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
@@ -942,7 +942,7 @@ static ngx_int_t
 ngx_http_rds_json_get_buf(ngx_http_request_t *r,
         ngx_http_rds_json_ctx_t *ctx)
 {
-    ngx_http_rds_json_conf_t            *conf;
+    ngx_http_rds_json_loc_conf_t         *conf;
 
     dd("MEM enter");
 

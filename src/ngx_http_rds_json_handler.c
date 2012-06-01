@@ -13,7 +13,6 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
     ngx_chain_t                     *cl;
     ngx_buf_t                       *b;
     size_t                           len;
-    ngx_http_rds_json_conf_t        *conf;
     ngx_str_t                        errstr;
     ngx_int_t                        rc;
     uintptr_t                        escape = 0;
@@ -21,6 +20,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
     uintptr_t                       *escapes = NULL;
     ngx_uint_t                       i;
     ngx_http_rds_json_property_t    *prop = NULL;
+    ngx_http_rds_json_loc_conf_t    *conf;
 
     dd("entered ret handler");
 

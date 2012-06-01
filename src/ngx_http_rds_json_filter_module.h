@@ -41,6 +41,12 @@ typedef struct {
 
 
 typedef struct {
+    unsigned            requires_filters; /* :1 */
+
+} ngx_http_rds_json_main_conf_t;
+
+
+typedef struct {
     ngx_flag_t                       enabled;
     ngx_uint_t                       format;
     ngx_str_t                        content_type;
@@ -57,7 +63,8 @@ typedef struct {
     /* for rds_json_ret */
     ngx_str_t                        errcode;
     ngx_http_complex_value_t        *errstr;
-} ngx_http_rds_json_conf_t;
+
+} ngx_http_rds_json_loc_conf_t;
 
 
 typedef enum {

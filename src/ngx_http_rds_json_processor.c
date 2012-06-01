@@ -141,7 +141,7 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 {
     ngx_buf_t                       *b;
     ngx_int_t                        rc;
-    ngx_http_rds_json_conf_t        *conf;
+    ngx_http_rds_json_loc_conf_t    *conf;
 
     if (in == NULL) {
         return NGX_OK;
@@ -244,7 +244,7 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
     ngx_buf_t                   *b;
     ngx_int_t                    rc;
 
-    ngx_http_rds_json_conf_t        *conf;
+    ngx_http_rds_json_loc_conf_t        *conf;
 
     if (in == NULL) {
         return NGX_OK;
