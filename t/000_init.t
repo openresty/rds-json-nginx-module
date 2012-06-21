@@ -142,7 +142,7 @@ GET /init
 
 
 
-=== TEST 8: cats - drop table
+=== TEST 8: cats - drop table - pg
 --- http_config eval: $::http_config2
 --- config
     location = /init {
@@ -159,7 +159,7 @@ GET /init
 
 
 
-=== TEST 9: cats - create table
+=== TEST 9: cats - create table - pg
 --- http_config eval: $::http_config2
 --- config
     location = /init {
@@ -173,7 +173,7 @@ GET /init
 
 
 
-=== TEST 10: cats - insert value
+=== TEST 10: cats - insert value - pg
 --- http_config eval: $::http_config2
 --- config
     location = /init {
@@ -187,7 +187,7 @@ GET /init
 
 
 
-=== TEST 11: cats - insert value
+=== TEST 11: cats - insert value - pg
 --- http_config eval: $::http_config2
 --- config
     location = /init {
