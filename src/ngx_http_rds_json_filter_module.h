@@ -78,7 +78,12 @@ typedef enum {
 } ngx_http_rds_json_state_t;
 
 
-typedef struct {
+typedef struct ngx_http_rds_json_ctx_s  ngx_http_rds_json_ctx_t;
+
+typedef ngx_int_t (*rds_json_process_handler_pt)(ngx_http_request_t *r,
+        ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx);
+
+struct ngx_http_rds_json_ctx_s {
     ngx_http_rds_json_state_t            state;
 
     ngx_str_t                           *col_name;
@@ -106,10 +111,13 @@ typedef struct {
 
     uint32_t                             field_data_rest;
 
+    rds_json_process_handler_pt          handler;
+
     ngx_flag_t                           header_sent:1;
     ngx_flag_t                           seen_stream_end:1;
     ngx_flag_t                           generated_col_names:1;
-} ngx_http_rds_json_ctx_t;
+};
+
 
 
 #endif /* NGX_HTTP_RDS_JSON_FILTER_MODULE_H */
