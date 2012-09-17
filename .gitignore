@@ -66,6 +66,6 @@ restart
 misc/
 t/servroot/
 all
-build1[01]
+build1[0-3]
 buildroot/
 *.html
