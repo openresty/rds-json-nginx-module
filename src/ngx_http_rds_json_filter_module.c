@@ -679,6 +679,9 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
     }
 
     prop = ngx_array_push(jlcf->user_props);
+    if (prop == NULL) {
+        return NGX_CONF_ERROR;
+    }
 
     /* process the user property key */
 
