@@ -66,3 +66,26 @@ Hello
 rds json header filter, "/foo"
 rds json body filter, "/foo"
 
+
+
+=== TEST 4: multiple http {} blocks
+--- config
+    location /foo {
+        echo Hello;
+        rds_json on;
+    }
+
+--- post_main_config
+    http {
+    }
+
+--- request
+    GET /foo
+--- response_headers
+Content-Type: text/plain
+--- response_body
+Hello
+--- error_log
+rds json header filter, "/foo"
+rds json body filter, "/foo"
+

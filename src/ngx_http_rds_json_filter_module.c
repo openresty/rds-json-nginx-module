@@ -24,6 +24,9 @@
 #define ngx_http_rds_json_errstr_default_key   "\"errstr\""
 
 
+static volatile ngx_cycle_t  *ngx_http_rds_json_prev_cycle = NULL;
+
+
 static ngx_conf_enum_t  ngx_http_rds_json_formats[] = {
     { ngx_string("normal"), json_format_normal },
     { ngx_string("compact"), json_format_compact },
@@ -372,14 +375,23 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 static ngx_int_t
 ngx_http_rds_json_filter_init(ngx_conf_t *cf)
 {
-    ngx_http_rds_json_main_conf_t     *rmcf;
+    int                              multi_http_blocks;
+    ngx_http_rds_json_main_conf_t   *rmcf;
 
     rmcf = ngx_http_conf_get_module_main_conf(cf,
                                               ngx_http_rds_json_filter_module);
 
+    if (ngx_http_rds_json_prev_cycle != ngx_cycle) {
+        ngx_http_rds_json_prev_cycle = ngx_cycle;
+        multi_http_blocks = 0;
+
+    } else {
+        multi_http_blocks = 1;
+    }
+
     dd("setting next filter: %d", (int) rmcf->requires_filters);
 
-    if (rmcf->requires_filters) {
+    if (multi_http_blocks || rmcf->requires_filters) {
         dd("register filters");
 
         ngx_http_rds_json_next_header_filter = ngx_http_top_header_filter;
