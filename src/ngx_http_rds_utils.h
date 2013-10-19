@@ -3,39 +3,40 @@
  * Copyright (C) agentzh
  */
 
+
 #ifndef NGX_HTTP_RDS_UTILS_H
 #define NGX_HTTP_RDS_UTILS_H
 
 
 static ngx_inline ngx_int_t
 ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
-        ngx_http_rds_header_t *header)
+    ngx_http_rds_header_t *header)
 {
     ssize_t          rest;
 
-    rest = sizeof(uint8_t)      /* endian type */
-         + sizeof(uint32_t)     /* format version */
-         + sizeof(uint8_t)      /* result type */
+    rest = sizeof(uint8_t)        /* endian type */
+           + sizeof(uint32_t)     /* format version */
+           + sizeof(uint8_t)      /* result type */
 
-         + sizeof(uint16_t)     /* standard error code */
-         + sizeof(uint16_t)     /* driver-specific error code */
+           + sizeof(uint16_t)     /* standard error code */
+           + sizeof(uint16_t)     /* driver-specific error code */
 
-         + sizeof(uint16_t)     /* driver-specific errstr len */
-         + 0                    /* driver-specific errstr data */
-         + sizeof(uint64_t)     /* affected rows */
-         + sizeof(uint64_t)     /* insert id */
-         + sizeof(uint16_t)     /* column count */
-         ;
+           + sizeof(uint16_t)     /* driver-specific errstr len */
+           + 0                    /* driver-specific errstr data */
+           + sizeof(uint64_t)     /* affected rows */
+           + sizeof(uint64_t)     /* insert id */
+           + sizeof(uint16_t)     /* column count */
+           ;
 
     if (b->last - b->pos < rest) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds: header is incomplete in the buf");
+                      "rds: header is incomplete in the buf");
         return NGX_ERROR;
     }
 
     /* check endian type */
 
-    if ( *(uint8_t *) b->pos !=
+    if (*(uint8_t *) b->pos !=
 #if (NGX_HAVE_LITTLE_ENDIAN)
             0
 #else /* big endian */
@@ -44,7 +45,7 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
        )
     {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds: endian type in the header differ");
+                      "rds: endian type in the header differ");
         return NGX_ERROR;
     }
 
@@ -52,9 +53,9 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 
     /* check RDS format version number */
 
-    if ( *(uint32_t *) b->pos != (uint32_t) resty_dbd_stream_version) {
+    if (*(uint32_t *) b->pos != (uint32_t) resty_dbd_stream_version) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds: RDS format version differ");
+                      "rds: RDS format version differ");
         return NGX_ERROR;
     }
 
@@ -66,7 +67,7 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 
     if (*b->pos != 0) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds: RDS result type must be 0 for now");
+                      "rds: RDS result type must be 0 for now");
         return NGX_ERROR;
     }
 
@@ -95,14 +96,14 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
     /* check the rest data's size */
 
     rest = header->errstr.len
-         + sizeof(uint64_t)     /* affected rows */
-         + sizeof(uint64_t)     /* insert id */
-         + sizeof(uint16_t)     /* column count */
-         ;
+           + sizeof(uint64_t)     /* affected rows */
+           + sizeof(uint64_t)     /* insert id */
+           + sizeof(uint16_t)     /* column count */
+           ;
 
     if (b->last - b->pos < rest) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds: header is incomplete in the buf");
+                      "rds: header is incomplete in the buf");
         return NGX_ERROR;
     }
 
@@ -138,18 +139,18 @@ ngx_http_rds_parse_header(ngx_http_request_t *r, ngx_buf_t *b,
 
 static ngx_inline ngx_int_t
 ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
-        ngx_http_rds_column_t *col)
+    ngx_http_rds_column_t *col)
 {
     ssize_t         rest;
 
     rest = sizeof(uint16_t)         /* std col type */
-         + sizeof(uint16_t)         /* driver col type */
-         + sizeof(uint16_t)         /* col name str len */
-         ;
+           + sizeof(uint16_t)       /* driver col type */
+           + sizeof(uint16_t)       /* col name str len */
+           ;
 
     if (b->last - b->pos < rest) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds: column spec is incomplete in the buf");
+                      "rds: column spec is incomplete in the buf");
         return NGX_ERROR;
     }
 
@@ -168,7 +169,7 @@ ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
 
     if (col->name.len == 0) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: column name empty");
+                      "rds_json: column name empty");
         return NGX_ERROR;
     }
 
@@ -176,7 +177,7 @@ ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
 
     if (b->last - b->pos < rest) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds: column name string is incomplete in the buf");
+                      "rds: column name string is incomplete in the buf");
         return NGX_ERROR;
     }
 
@@ -191,12 +192,11 @@ ngx_http_rds_parse_col(ngx_http_request_t *r, ngx_buf_t *b,
     b->pos += col->name.len;
 
     dd("saved column name \"%.*s\" (len %d, offset %d)",
-            (int) col->name.len, col->name.data,
-            (int) col->name.len, (int) (b->pos - b->start));
+       (int) col->name.len, col->name.data,
+       (int) col->name.len, (int) (b->pos - b->start));
 
     return NGX_OK;
 }
 
 
 #endif /* NGX_HTTP_RDS_UTILS_H */
-

@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) agentzh
  */
@@ -8,6 +9,7 @@
 #endif
 #include "ddebug.h"
 
+
 #include "ngx_http_rds_json_util.h"
 #include "ngx_http_rds_json_processor.h"
 #include "ngx_http_rds_json_output.h"
@@ -17,9 +19,10 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+
 ngx_int_t
 ngx_http_rds_json_process_header(ngx_http_request_t *r,
-        ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
+    ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
 {
     ngx_buf_t                       *b;
     ngx_http_rds_header_t            header;
@@ -31,11 +34,11 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
 
     b = in->buf;
 
-    if ( ! ngx_buf_in_memory(b) ) {
-        if ( ! ngx_buf_special(b) ) {
+    if (!ngx_buf_in_memory(b)) {
+        if (!ngx_buf_special(b)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: process header: buf from "
-                "upstream not in memory");
+                          "rds_json: process header: buf from "
+                          "upstream not in memory");
             goto invalid;
         }
 
@@ -64,16 +67,15 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: header: there's unexpected remaining data "
-                    "in the buf");
-
+                          "rds_json: header: there's unexpected remaining data "
+                          "in the buf");
             goto invalid;
         }
 
         ctx->state = state_done;
 
         /* now we send the postponed response header */
-        if (! ctx->header_sent) {
+        if (!ctx->header_sent) {
             ctx->header_sent = 1;
 
             rc = ngx_http_rds_json_next_header_filter(r);
@@ -95,7 +97,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
     }
 
     ctx->cols = ngx_palloc(r->pool,
-            header.col_count * sizeof(ngx_http_rds_column_t));
+                           header.col_count * sizeof(ngx_http_rds_column_t));
 
     if (ctx->cols == NULL) {
         goto invalid;
@@ -106,7 +108,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
     ctx->col_count = header.col_count;
 
     /* now we send the postponed response header */
-    if (! ctx->header_sent) {
+    if (!ctx->header_sent) {
         ctx->header_sent = 1;
 
         rc = ngx_http_rds_json_next_header_filter(r);
@@ -115,13 +117,13 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
         }
     }
 
-    return ngx_http_rds_json_process_col(r,
-            b->pos == b->last ? in->next : in, ctx);
+    return ngx_http_rds_json_process_col(r, b->pos == b->last ? in->next : in,
+                                         ctx);
 
 invalid:
 
     dd("return 500");
-    if (! ctx->header_sent) {
+    if (!ctx->header_sent) {
         ctx->header_sent = 1;
 
         r->headers_out.status = NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -136,8 +138,8 @@ invalid:
 
 
 ngx_int_t
-ngx_http_rds_json_process_col(ngx_http_request_t *r,
-        ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
+ngx_http_rds_json_process_col(ngx_http_request_t *r, ngx_chain_t *in,
+    ngx_http_rds_json_ctx_t *ctx)
 {
     ngx_buf_t                       *b;
     ngx_int_t                        rc;
@@ -149,11 +151,11 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 
     b = in->buf;
 
-    if ( ! ngx_buf_in_memory(b) ) {
-        if ( ! ngx_buf_special(b) ) {
+    if (!ngx_buf_in_memory(b) ) {
+        if (!ngx_buf_special(b) ) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: process col: buf from "
-                "upstream not in memory");
+                          "rds_json: process col: buf from "
+                          "upstream not in memory");
             return NGX_ERROR;
         }
 
@@ -190,7 +192,6 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
         ctx->row = 0;
 
         dd("output \"[\"");
-
         dd("before output literal");
 
         conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
@@ -206,7 +207,8 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
         }
 
         rc = ngx_http_rds_json_output_literal(r, ctx,
-                (u_char *)"[", sizeof("[") - 1, 0 /* last buf */);
+                                              (u_char *)"[", sizeof("[") - 1,
+                                              0 /* last buf */);
 
         dd("after output literal");
 
@@ -228,7 +230,6 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
             return rc;
         }
 
-
         dd("process col is entering process row...");
         return ngx_http_rds_json_process_row(r, in, ctx);
     }
@@ -238,8 +239,8 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r,
 
 
 ngx_int_t
-ngx_http_rds_json_process_row(ngx_http_request_t *r,
-        ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
+ngx_http_rds_json_process_row(ngx_http_request_t *r, ngx_chain_t *in,
+    ngx_http_rds_json_ctx_t *ctx)
 {
     ngx_buf_t                   *b;
     ngx_int_t                    rc;
@@ -254,11 +255,11 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
     b = in->buf;
 
-    if ( ! ngx_buf_in_memory(b) ) {
-        if ( ! ngx_buf_special(b) ) {
+    if (!ngx_buf_in_memory(b) ) {
+        if (!ngx_buf_special(b) ) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: process row: buf from "
-                "upstream not in memory");
+                          "rds_json: process row: buf from "
+                          "upstream not in memory");
             return NGX_ERROR;
         }
 
@@ -273,7 +274,7 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
     if (b->last - b->pos < (ssize_t) sizeof(uint8_t)) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-               "rds_json: row flag is incomplete in the buf");
+                      "rds_json: row flag is incomplete in the buf");
         return NGX_ERROR;
     }
 
@@ -287,8 +288,8 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: row: there's unexpected remaining data "
-                    "in the buf");
+                          "rds_json: row: there's unexpected remaining data "
+                          "in the buf");
             return NGX_ERROR;
         }
 
@@ -296,11 +297,15 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
         if (conf->root.len) {
             rc = ngx_http_rds_json_output_literal(r, ctx,
-                    (u_char *)"]}", sizeof("]}") - 1, 1 /* last buf*/);
+                                                  (u_char *)"]}",
+                                                  sizeof("]}") - 1,
+                                                  1 /* last buf*/);
 
         } else {
             rc = ngx_http_rds_json_output_literal(r, ctx,
-                    (u_char *)"]", sizeof("]") - 1, 1 /* last buf*/);
+                                                  (u_char *)"]",
+                                                  sizeof("]") - 1,
+                                                  1 /* last buf*/);
         }
 
         if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
@@ -326,8 +331,8 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r,
 
 
 ngx_int_t
-ngx_http_rds_json_process_field(ngx_http_request_t *r,
-        ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
+ngx_http_rds_json_process_field(ngx_http_request_t *r, ngx_chain_t *in,
+    ngx_http_rds_json_ctx_t *ctx)
 {
     size_t              total, len;
     ngx_buf_t          *b;
@@ -340,13 +345,13 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
         b = in->buf;
 
-        if ( ! ngx_buf_in_memory(b) ) {
+        if (!ngx_buf_in_memory(b) ) {
             dd("buf not in memory");
 
-            if ( ! ngx_buf_special(b) ) {
+            if (!ngx_buf_special(b) ) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: process field: buf from "
-                    "upstream not in memory");
+                              "rds_json: process field: buf from "
+                              "upstream not in memory");
                 return NGX_ERROR;
             }
 
@@ -363,9 +368,9 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
         if (b->last - b->pos < (ssize_t) sizeof(uint32_t)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                   "rds_json: field size is incomplete in the buf: %*s "
-                   "(len: %d)", b->last - b->pos, b->pos,
-                   (int) (b->last - b->pos));
+                          "rds_json: field size is incomplete in the buf: %*s "
+                          "(len: %d)", b->last - b->pos, b->pos,
+                          (int) (b->last - b->pos));
 
             return NGX_ERROR;
         }
@@ -383,7 +388,7 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
             ctx->field_data_rest = 0;
 
             rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len,
-                    1 /* is null */);
+                                                1 /* is null */);
 
         } else {
             len = (uint32_t) (b->last - b->pos);
@@ -395,7 +400,7 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
             ctx->field_data_rest = total - len;
 
             rc = ngx_http_rds_json_output_field(r, ctx, b->pos, len,
-                    0 /* not null */);
+                                                0 /* not null */);
         }
 
         if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
@@ -437,7 +442,7 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r,
 
 ngx_int_t
 ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
-        ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
+    ngx_chain_t *in, ngx_http_rds_json_ctx_t *ctx)
 {
     ngx_int_t                    rc;
     ngx_buf_t                   *b;
@@ -450,9 +455,9 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
 
         b = in->buf;
 
-        if ( ! ngx_buf_in_memory(b)) {
+        if (!ngx_buf_in_memory(b)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                    "rds_json: buf from upstream not in memory");
+                          "rds_json: buf from upstream not in memory");
             return NGX_ERROR;
         }
 
@@ -506,4 +511,3 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
 
     return NGX_ERROR;
 }
-

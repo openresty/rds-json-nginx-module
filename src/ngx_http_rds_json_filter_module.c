@@ -1,6 +1,6 @@
 
 /*
- * Copyright (C) agentzh
+ * Copyright (C) Yichun Zhang (agentzh)
  */
 
 
@@ -41,21 +41,21 @@ ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
 
 static void * ngx_http_rds_json_create_main_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf);
+    void *conf);
 static void *ngx_http_rds_json_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_merge_loc_conf(ngx_conf_t *cf, void *parent,
     void *child);
 static ngx_int_t ngx_http_rds_json_filter_init(ngx_conf_t *cf);
 static char * ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf);
+    void *conf);
 static char * ngx_http_rds_json_success_property(ngx_conf_t *cf,
-        ngx_command_t *cmd, void *conf);
+    ngx_command_t *cmd, void *conf);
 static char * ngx_http_rds_json_user_property(ngx_conf_t *cf,
-        ngx_command_t *cmd, void *conf);
+    ngx_command_t *cmd, void *conf);
 static char * ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf);
+    void *conf);
 static char * ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf);
+    void *conf);
 static char * ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
@@ -204,8 +204,8 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
         ngx_http_set_ctx(r, NULL, ngx_http_rds_json_filter_module);
 
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "rds json: skipped due to bad status: %ui",
-                r->headers_out.status);
+                       "rds json: skipped due to bad status: %ui",
+                       r->headers_out.status);
 
         return ngx_http_rds_json_next_header_filter(r);
     }
@@ -216,16 +216,17 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
 
     if (!conf->enabled) {
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "rds json: skipped because not enabled in the current "
-                "location");
+                       "rds json: skipped because not enabled in the current "
+                       "location");
 
         return ngx_http_rds_json_next_header_filter(r);
     }
 
     if (ngx_http_rds_json_test_content_type(r) != NGX_OK) {
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "rds json: skipped due to unmatched Content-Type response "
-                "header \"%V\"", &r->headers_out.content_type);
+                       "rds json: skipped due to unmatched Content-Type "
+                       "response header \"%V\"",
+                       &r->headers_out.content_type);
 
         return ngx_http_rds_json_next_header_filter(r);
     }
@@ -269,7 +270,7 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
     r->filter_need_in_memory = 1;
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-            "rds json header filter postponed header sending");
+                   "rds json header filter postponed header sending");
 
     /* we do postpone the header sending to the body filter */
     return NGX_OK;
@@ -296,7 +297,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     }
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-            "rds json body filter postponed header sending");
+                   "rds json body filter postponed header sending");
 
     switch (ctx->state) {
     case state_expect_header:
@@ -322,7 +323,8 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     case state_done:
 
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                "rds json body filter discarding unexpected trailing buffers");
+                       "rds json body filter discarding unexpected trailing "
+                       "buffers");
 
         /* mark the remaining bufs as consumed */
 
@@ -332,8 +334,8 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     default:
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                       "rds_json: invalid internal state: %d",
-                       ctx->state);
+                      "rds_json: invalid internal state: %d",
+                      ctx->state);
 
         rc = NGX_ERROR;
 
@@ -345,7 +347,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         ctx->state = state_done;
 
-        if (! ctx->header_sent) {
+        if (!ctx->header_sent) {
             ctx->header_sent = 1;
 
             if (rc == NGX_ERROR) {
@@ -355,7 +357,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
             r->headers_out.status = rc;
 
             ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                    "rds json body filter sending error page headers");
+                           "rds json body filter sending error page headers");
 
             ngx_http_rds_json_next_header_filter(r);
             ngx_http_send_special(r, NGX_HTTP_LAST);
@@ -478,8 +480,7 @@ ngx_http_rds_json_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
 
 static char *
-ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_http_core_loc_conf_t            *clcf;
@@ -494,7 +495,7 @@ ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
 
     if (jlcf->errcode.len == 0) {
         ngx_log_error(NGX_LOG_ERR, cf->log, 0,
-                "rds_json: rds_json_ret: the errcode argument is empty");
+                      "rds_json: rds_json_ret: the errcode argument is empty");
 
         return NGX_CONF_ERROR;
     }
@@ -505,8 +506,8 @@ ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
 
         if (c < '0' || c > '9') {
             ngx_log_error(NGX_LOG_ERR, cf->log, 0,
-                    "rds_json: rds_json_ret: invalid errcode argument: "
-                    "\"%V\"", &jlcf->errcode);
+                          "rds_json: rds_json_ret: invalid errcode argument: "
+                          "\"%V\"", &jlcf->errcode);
 
             return NGX_CONF_ERROR;
         }
@@ -547,8 +548,7 @@ done:
 
 
 static char *
-ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
@@ -566,7 +566,7 @@ ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
     }
 
     escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
-            value[1].len);
+                                               value[1].len);
 
     jlcf->root.len = value[1].len + escape + sizeof("\"\"") - 1;
 
@@ -584,7 +584,7 @@ ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
 
     } else {
         p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
-                value[1].len);
+                                                         value[1].len);
     }
 
     *p++ = '"';
@@ -599,7 +599,7 @@ ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
 
 static char *
 ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+    void *conf)
 {
     ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
@@ -617,7 +617,7 @@ ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
     }
 
     escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
-            value[1].len);
+                                               value[1].len);
 
     jlcf->success.len = value[1].len + escape + sizeof("\"\"") - 1;
 
@@ -635,7 +635,7 @@ ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
 
     } else {
         p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
-                value[1].len);
+                                                         value[1].len);
     }
 
     *p++ = '"';
@@ -650,15 +650,14 @@ ngx_http_rds_json_success_property(ngx_conf_t *cf, ngx_command_t *cmd,
 
 static char *
 ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+    void *conf)
 {
-    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
-    ngx_str_t                           *value;
-    ngx_http_rds_json_property_t        *prop;
-    uintptr_t                            escape;
     u_char                              *p;
-
-    ngx_http_compile_complex_value_t         ccv;
+    ngx_str_t                           *value;
+    uintptr_t                            escape;
+    ngx_http_rds_json_property_t        *prop;
+    ngx_http_rds_json_loc_conf_t        *jlcf = conf;
+    ngx_http_compile_complex_value_t     ccv;
 
     value = cf->args->elts;
 
@@ -672,7 +671,7 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
 
     if (jlcf->user_props == NULL) {
         jlcf->user_props = ngx_array_create(cf->pool, 4,
-                            sizeof(ngx_http_rds_json_property_t));
+                                        sizeof(ngx_http_rds_json_property_t));
 
         if (jlcf->user_props == NULL) {
             return NGX_CONF_ERROR;
@@ -684,7 +683,7 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
     /* process the user property key */
 
     escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
-            value[1].len);
+                                               value[1].len);
 
     prop->key.len = value[1].len + escape + sizeof("\"\"") - 1;
 
@@ -702,7 +701,7 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
 
     } else {
         p = (u_char *) ngx_http_rds_json_escape_json_str(p, value[1].data,
-                value[1].len);
+                                                         value[1].len);
     }
 
     *p++ = '"';
@@ -727,13 +726,12 @@ ngx_http_rds_json_user_property(ngx_conf_t *cf, ngx_command_t *cmd,
 
 
 static char *
-ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_http_rds_json_loc_conf_t        *jlcf = conf;
+    u_char                              *p;
     ngx_str_t                           *value;
     uintptr_t                            escape;
-    u_char                              *p;
 
     value = cf->args->elts;
 
@@ -746,7 +744,7 @@ ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
     }
 
     escape = ngx_http_rds_json_escape_json_str(NULL, value[1].data,
-            value[1].len);
+                                               value[1].len);
 
     jlcf->errcode_key.len = value[1].len + escape + sizeof("\"\"") - 1;
 
@@ -778,8 +776,7 @@ ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
 
 
 static char *
-ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
-        void *conf)
+ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     ngx_http_rds_json_loc_conf_t        *jlcf = conf;
     ngx_str_t                           *value;
@@ -860,4 +857,3 @@ ngx_http_rds_json_create_main_conf(ngx_conf_t *cf)
 
     return rmcf;
 }
-
