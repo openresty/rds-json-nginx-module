@@ -8,7 +8,7 @@ repeat_each(2);
 
 worker_connections(128);
 workers(1);
-master_on;
+#master_on;
 log_level('warn');
 
 plan tests => repeat_each() * 3 * blocks();
