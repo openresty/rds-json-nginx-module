@@ -152,12 +152,12 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/ >), for
-    example, the version 1.0.9 (see nginx compatibility), and then build
+    example, the version 1.4.3 (see nginx compatibility), and then build
     the source with this module:
 
-        wget 'http://sysoev.ru/nginx/nginx-1.0.9.tar.gz'
-        tar -xzvf nginx-1.0.9.tar.gz
-        cd nginx-1.0.9/
+        wget 'http://nginx.org/download/nginx-1.4.3.tar.gz'
+        tar -xzvf nginx-1.4.3.tar.gz
+        cd nginx-1.4.3/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         ./configure --prefix=/opt/nginx \
@@ -173,6 +173,10 @@ Installation
 
 Compatibility
     The following versions of Nginx should work with this module:
+
+    *   1.4.x (last tested: 1.4.3)
+
+    *   1.2.x (last tested: 1.2.9)
 
     *   1.1.x (last tested: 1.1.5)
 
@@ -200,14 +204,12 @@ See Also
     * ngx_postgres ( http://github.com/FRiCKLE/ngx_postgres/ )
 
 Author
-    Zhang "agentzh" Yichun (章亦春) <agentzh at gmail dot com>
+    Yichun "agentzh" Zhang (章亦春) <agentzh at gmail dot com>, CloudFlare Inc.
 
 Copyright & License
     This module is licenced under the BSD license.
 
-    Copyright (c) 2009, 2010, 2011, Taobao Inc., Alibaba Group ( http://www.taobao.com ).
-
-    Copyright (C) 2009, 2010, 2011, Zhang "agentzh" Yichun (章亦春) <agentzh@gmail.com>.
+    Copyright (C) 2009-2013, Yichun Zhang (agentzh) <agentzh@gmail.com>, CloudFlare Inc.
 
     All rights reserved.
 
