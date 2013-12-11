@@ -435,8 +435,6 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r, ngx_chain_t *in,
     }
 
     /* impossible to reach here */
-
-    return NGX_ERROR;
 }
 
 
@@ -508,6 +506,4 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
     }
 
     /* impossible to reach here */
-
-    return NGX_ERROR;
 }
