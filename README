@@ -152,12 +152,12 @@ Directives
 
 Installation
     Grab the nginx source code from nginx.net (<http://nginx.net/ >), for
-    example, the version 1.4.3 (see nginx compatibility), and then build
+    example, the version 1.4.4 (see nginx compatibility), and then build
     the source with this module:
 
-        wget 'http://nginx.org/download/nginx-1.4.3.tar.gz'
-        tar -xzvf nginx-1.4.3.tar.gz
-        cd nginx-1.4.3/
+        wget 'http://nginx.org/download/nginx-1.4.4.tar.gz'
+        tar -xzvf nginx-1.4.4.tar.gz
+        cd nginx-1.4.4/
 
         # Here we assume you would install you nginx under /opt/nginx/.
         ./configure --prefix=/opt/nginx \
@@ -174,7 +174,7 @@ Installation
 Compatibility
     The following versions of Nginx should work with this module:
 
-    *   1.4.x (last tested: 1.4.3)
+    *   1.4.x (last tested: 1.4.4)
 
     *   1.2.x (last tested: 1.2.9)
 
