@@ -151,8 +151,8 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r, ngx_chain_t *in,
 
     b = in->buf;
 
-    if (!ngx_buf_in_memory(b) ) {
-        if (!ngx_buf_special(b) ) {
+    if (!ngx_buf_in_memory(b)) {
+        if (!ngx_buf_special(b)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                           "rds_json: process col: buf from "
                           "upstream not in memory");
@@ -255,8 +255,8 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r, ngx_chain_t *in,
 
     b = in->buf;
 
-    if (!ngx_buf_in_memory(b) ) {
-        if (!ngx_buf_special(b) ) {
+    if (!ngx_buf_in_memory(b)) {
+        if (!ngx_buf_special(b)) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                           "rds_json: process row: buf from "
                           "upstream not in memory");
@@ -279,8 +279,8 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r, ngx_chain_t *in,
     }
 
     dd("row flag: %d (offset %d)",
-            (char) *b->pos,
-            (int) (b->pos - b->start));
+       (char) *b->pos,
+       (int) (b->pos - b->start));
 
     if (*b->pos++ == 0) {
         /* end of row list */
@@ -345,10 +345,10 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r, ngx_chain_t *in,
 
         b = in->buf;
 
-        if (!ngx_buf_in_memory(b) ) {
+        if (!ngx_buf_in_memory(b)) {
             dd("buf not in memory");
 
-            if (!ngx_buf_special(b) ) {
+            if (!ngx_buf_special(b)) {
                 ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                               "rds_json: process field: buf from "
                               "upstream not in memory");
