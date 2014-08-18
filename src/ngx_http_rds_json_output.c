@@ -1009,6 +1009,7 @@ ngx_http_rds_json_get_postponed(ngx_http_request_t *r,
     return ctx->cached.start;
 
 alloc:
+
     p = ngx_palloc(r->pool, len);
     if (p == NULL) {
         return NULL;
