@@ -39,24 +39,24 @@ ngx_http_output_header_filter_pt  ngx_http_rds_json_next_header_filter;
 ngx_http_output_body_filter_pt    ngx_http_rds_json_next_body_filter;
 
 
-static void * ngx_http_rds_json_create_main_conf(ngx_conf_t *cf);
+static void *ngx_http_rds_json_create_main_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static void *ngx_http_rds_json_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_rds_json_merge_loc_conf(ngx_conf_t *cf, void *parent,
     void *child);
 static ngx_int_t ngx_http_rds_json_filter_init(ngx_conf_t *cf);
-static char * ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
+static char *ngx_http_rds_json_root(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char * ngx_http_rds_json_success_property(ngx_conf_t *cf,
+static char *ngx_http_rds_json_success_property(ngx_conf_t *cf,
     ngx_command_t *cmd, void *conf);
-static char * ngx_http_rds_json_user_property(ngx_conf_t *cf,
+static char *ngx_http_rds_json_user_property(ngx_conf_t *cf,
     ngx_command_t *cmd, void *conf);
-static char * ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
+static char *ngx_http_rds_json_errcode_key(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char * ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
+static char *ngx_http_rds_json_errstr_key(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char * ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_rds_json(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
 static ngx_command_t  ngx_http_rds_json_commands[] = {

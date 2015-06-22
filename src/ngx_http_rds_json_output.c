@@ -17,11 +17,11 @@
 #include <nginx.h>
 
 
-static u_char * ngx_http_rds_json_request_mem(ngx_http_request_t *r,
+static u_char *ngx_http_rds_json_request_mem(ngx_http_request_t *r,
     ngx_http_rds_json_ctx_t *ctx, size_t len);
 static ngx_int_t ngx_http_rds_json_get_buf(ngx_http_request_t *r,
     ngx_http_rds_json_ctx_t *ctx);
-static u_char * ngx_http_rds_json_get_postponed(ngx_http_request_t *r,
+static u_char *ngx_http_rds_json_get_postponed(ngx_http_request_t *r,
     ngx_http_rds_json_ctx_t *ctx, size_t len);
 static ngx_int_t ngx_http_rds_json_submit_mem(ngx_http_request_t *r,
     ngx_http_rds_json_ctx_t *ctx, size_t len, unsigned last_buf);
