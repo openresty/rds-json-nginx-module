@@ -281,7 +281,7 @@ the version 1.7.10 (see [nginx compatibility](#compatibility)), and then build t
  $ make install
 ```
 
-ownload the latest version of the release tarball of this module from [echo-nginx-module file list](https://github.com/agentzh/echo-nginx-module/tags).
+Download the latest version of the release tarball of this module from [rds-json-nginx-module file list](https://github.com/openresty/rds-json-nginx-module/tags).
 
 Also, this module is included and enabled by default in the [ngx_openresty bundle](http://openresty.org).
 
