@@ -69,6 +69,9 @@ rds json body filter, "/foo"
 
 
 === TEST 4: multiple http {} blocks
+This test case won't run with nginx 1.9.3+ since duplicate http {} blocks
+have been prohibited since then.
+--- SKIP
 --- config
     location /foo {
         echo Hello;
