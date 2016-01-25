@@ -265,13 +265,13 @@ You're recommended to install this module (as well as the Nginx core and many ot
 Alternatively, you can install this module manually with the Nginx source:
 
 Grab the nginx source code from [nginx.org](http://nginx.org/), for example,
-the version 1.7.10 (see [nginx compatibility](#compatibility)), and then build the source with this module:
+the version 1.9.7 (see [nginx compatibility](#compatibility)), and then build the source with this module:
 
 ```bash
 
- $ wget 'http://nginx.org/download/nginx-1.7.10.tar.gz'
- $ tar -xzvf nginx-1.7.10.tar.gz
- $ cd nginx-1.7.10/
+ $ wget 'http://nginx.org/download/nginx-1.9.7.tar.gz'
+ $ tar -xzvf nginx-1.9.7.tar.gz
+ $ cd nginx-1.9.7/
 
  # Here we assume you would install you nginx under /opt/nginx/.
  $ ./configure --prefix=/opt/nginx \
