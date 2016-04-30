@@ -73,6 +73,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
         }
 
         ctx->state = state_done;
+        ctx->handler = NULL;
 
         /* now we send the postponed response header */
         if (!ctx->header_sent) {
@@ -104,6 +105,7 @@ ngx_http_rds_json_process_header(ngx_http_request_t *r,
     }
 
     ctx->state = state_expect_col;
+    ctx->handler = ngx_http_rds_json_process_col;
     ctx->cur_col = 0;
     ctx->col_count = header.col_count;
 
@@ -189,6 +191,7 @@ ngx_http_rds_json_process_col(ngx_http_request_t *r, ngx_chain_t *in,
         dd("end of column list");
 
         ctx->state = state_expect_row;
+        ctx->handler = ngx_http_rds_json_process_row;
         ctx->row = 0;
 
         dd("output \"[\"");
@@ -285,6 +288,7 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r, ngx_chain_t *in,
     if (*b->pos++ == 0) {
         /* end of row list */
         ctx->state = state_done;
+        ctx->handler = NULL;
 
         if (b->pos != b->last) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
@@ -318,6 +322,7 @@ ngx_http_rds_json_process_row(ngx_http_request_t *r, ngx_chain_t *in,
     ctx->row++;
     ctx->cur_col = 0;
     ctx->state = state_expect_field;
+    ctx->handler = ngx_http_rds_json_process_field;
 
     if (b->pos == b->last) {
         in = in->next;
@@ -417,6 +422,7 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r, ngx_chain_t *in,
             dd("process field: need to read more field data");
 
             ctx->state = state_expect_more_field_data;
+            ctx->handler = ngx_http_rds_json_process_more_field_data;
 
             return ngx_http_rds_json_process_more_field_data(r, in, ctx);
         }
@@ -427,6 +433,7 @@ ngx_http_rds_json_process_field(ngx_http_request_t *r, ngx_chain_t *in,
             dd("reached the end of the current row");
 
             ctx->state = state_expect_row;
+            ctx->handler = ngx_http_rds_json_process_row;
 
             return ngx_http_rds_json_process_row(r, in, ctx);
         }
@@ -494,6 +501,7 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
             dd("process more field data: reached the end of the current row");
 
             ctx->state = state_expect_row;
+            ctx->handler = ngx_http_rds_json_process_row;
 
             return ngx_http_rds_json_process_row(r, in, ctx);
         }
@@ -501,6 +509,7 @@ ngx_http_rds_json_process_more_field_data(ngx_http_request_t *r,
         dd("proces more field data: read the next field");
 
         ctx->state = state_expect_field;
+        ctx->handler = ngx_http_rds_json_process_field;
 
         return ngx_http_rds_json_process_field(r, in, ctx);
     }

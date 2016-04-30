@@ -243,6 +243,7 @@ ngx_http_rds_json_header_filter(ngx_http_request_t *r)
     ctx->tag = (ngx_buf_tag_t) &ngx_http_rds_json_filter_module;
 
     ctx->state = state_expect_header;
+    ctx->handler = ngx_http_rds_json_process_header;
 
     ctx->header_sent = 0;
 
@@ -299,6 +300,22 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "rds json body filter postponed header sending");
 
+        if (ctx->handler) {
+            rc = ctx->handler(r, in, ctx);
+        } else {
+            /* status done */
+
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+                    "rds json body filter discarding unexpected trailing buffers");
+
+            /* mark the remaining bufs as consumed */
+
+            ngx_http_rds_json_discard_bufs(r->pool, in);
+
+            return NGX_OK;
+        }
+
+#if 0
     switch (ctx->state) {
     case state_expect_header:
         rc = ngx_http_rds_json_process_header(r, in, ctx);
@@ -341,7 +358,7 @@ ngx_http_rds_json_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
         break;
     }
-
+#endif
     dd("body filter rc: %d", (int) rc);
 
     if (rc == NGX_ERROR || rc >= NGX_HTTP_SPECIAL_RESPONSE) {
