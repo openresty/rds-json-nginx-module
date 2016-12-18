@@ -313,7 +313,7 @@ work with this module, please consider reporting a bug.
 
 Author
 ======
-Yichun "agentzh" Zhang (章亦春) *&lt;agentzh@gmail.com&gt;*, CloudFlare Inc.
+Yichun "agentzh" Zhang (章亦春) *&lt;agentzh@gmail.com&gt;*, OpenResty Inc.
 
 [Back to TOC](#table-of-contents)
 
@@ -322,7 +322,7 @@ Copyright & License
 
 This module is licenced under the BSD license.
 
-Copyright (C) 2009-2016, Yichun Zhang (agentzh) &lt;agentzh@gmail.com&gt;, CloudFlare Inc.
+Copyright (C) 2009-2017, Yichun Zhang (agentzh) &lt;agentzh@gmail.com&gt;, OpenResty Inc.
 
 All rights reserved.
 
