@@ -7,7 +7,16 @@ language: c
 
 addons:
   apt:
-    packages: [ mysql-server, axel, cpanminus, libtest-base-perl, libtext-diff-perl, liburi-perl, libwww-perl, libtest-longstring-perl, liblist-moreutils-perl ]
+    packages:
+    - axel
+    - cpanminus
+    - libtest-base-perl
+    - libtext-diff-perl
+    - liburi-perl
+    - libwww-perl
+    - libtest-longstring-perl
+    - liblist-moreutils-perl
+    - libgd-dev
 
 cache:
   apt: true
@@ -34,6 +43,7 @@ env:
     - NGINX_VERSION=1.11.2
 
 services:
+ - mysql
  - postgresql
 
 install:
