@@ -62,7 +62,7 @@ install:
   - git clone https://github.com/openresty/array-var-nginx-module.git ../array-var-nginx-module
   - git clone https://github.com/openresty/drizzle-nginx-module.git ../drizzle-nginx-module
   - git clone https://github.com/calio/form-input-nginx-module.git ../form-input-nginx-module
-  - git clone https://github.com/FRiCKLE/ngx_postgres.git ../postgres-nginx-module
+  - git clone https://github.com/openresty/ngx_postgres.git ../postgres-nginx-module
   - git clone https://github.com/openresty/openresty.git ../ngx_openresty
 
 before_script:
