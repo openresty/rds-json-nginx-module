@@ -364,6 +364,7 @@ GET /test
 
 
 === TEST 14: strings need to be escaped
+--- SKIP
 --- http_config eval: $::http_config
 --- config
     location /test {
