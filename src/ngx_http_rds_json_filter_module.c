@@ -535,8 +535,7 @@ ngx_http_rds_json_ret(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 done:
 
-    clcf = ngx_http_conf_get_module_loc_conf(cf,
-            ngx_http_core_module);
+    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
     if (clcf == NULL) {
         return NGX_CONF_ERROR;
     }

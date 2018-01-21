@@ -152,15 +152,15 @@ ngx_http_rds_json_output_header(ngx_http_request_t *r,
 
     if (conf->user_props) {
         values = ngx_pnalloc(r->pool,
-                             conf->user_props->nelts * (sizeof(ngx_str_t)
-                             + sizeof(uintptr_t)));
+                             conf->user_props->nelts
+                             * (sizeof(ngx_str_t) + sizeof(uintptr_t)));
 
         if (values == NULL) {
             return NGX_ERROR;
         }
 
         escapes = (uintptr_t *) ((u_char *) values
-                  + conf->user_props->nelts * sizeof(ngx_str_t));
+                                 + conf->user_props->nelts * sizeof(ngx_str_t));
 
         prop = conf->user_props->elts;
         for (i = 0; i < conf->user_props->nelts; i++) {
@@ -327,15 +327,16 @@ ngx_http_rds_json_output_props(ngx_http_request_t *r,
 
     if (conf->user_props) {
         values = ngx_pnalloc(r->pool,
-                             conf->user_props->nelts * (sizeof(ngx_str_t)
-                             + sizeof(uintptr_t)));
+                             conf->user_props->nelts
+                             * (sizeof(ngx_str_t) + sizeof(uintptr_t)));
 
         if (values == NULL) {
             return NGX_ERROR;
         }
 
         escapes = (uintptr_t *) ((u_char *) values
-                  + conf->user_props->nelts * sizeof(ngx_str_t));
+                                 + conf->user_props->nelts
+                                 * sizeof(ngx_str_t));
 
         prop = conf->user_props->elts;
         for (i = 0; i < conf->user_props->nelts; i++) {
@@ -873,14 +874,14 @@ ngx_http_rds_json_output_more_field_data(ngx_http_request_t *r,
 
         } else {
             dd("more field data: string value escape non-zero: %d",
-                (int) escape);
+               (int) escape);
 
 #if DDEBUG
                 p = last;
 #endif
 
             last = (u_char *) ngx_http_rds_json_escape_json_str(last,
-                    data, len);
+                                                                data, len);
 
 #if DDEBUG
             dd("escaped value \"%.*s\" (len %d, escape %d, escape2 %d)",

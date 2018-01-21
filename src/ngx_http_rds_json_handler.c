@@ -24,8 +24,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     dd("entered ret handler");
 
-    conf = ngx_http_get_module_loc_conf(r,
-            ngx_http_rds_json_filter_module);
+    conf = ngx_http_get_module_loc_conf(r, ngx_http_rds_json_filter_module);
 
     /* evaluate the final value of conf->errstr */
 
@@ -43,8 +42,8 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
         ;
 
     if (errstr.len) {
-        escape = ngx_http_rds_json_escape_json_str(NULL,
-                errstr.data, errstr.len);
+        escape = ngx_http_rds_json_escape_json_str(NULL, errstr.data,
+                                                   errstr.len);
 
         len += sizeof(",") - 1
              + conf->errstr_key.len
@@ -58,6 +57,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     if (conf->success.len) {
         len += conf->success.len + sizeof(":,") - 1;
+
         if (ngx_atoi(conf->errcode.data, conf->errcode.len) == 0) {
             len += sizeof("true") - 1;
 
@@ -68,15 +68,15 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     if (conf->user_props) {
         values = ngx_pnalloc(r->pool,
-                    conf->user_props->nelts * (sizeof(ngx_str_t) +
-                    sizeof(uintptr_t)));
+                             conf->user_props->nelts
+                             * (sizeof(ngx_str_t) + sizeof(uintptr_t)));
 
         if (values == NULL) {
             return NGX_ERROR;
         }
 
         escapes = (uintptr_t *) ((u_char *) values +
-                  conf->user_props->nelts * sizeof(ngx_str_t));
+                                 conf->user_props->nelts * sizeof(ngx_str_t));
 
         prop = conf->user_props->elts;
         for (i = 0; i < conf->user_props->nelts; i++) {
@@ -87,7 +87,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
             }
 
             escapes[i] = ngx_http_rds_json_escape_json_str(NULL, values[i].data,
-                values[i].len);
+                                                           values[i].len);
 
             len += sizeof(":\"\",") - 1 + prop[i].key.len + values[i].len
                   + escapes[i];
@@ -124,8 +124,8 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     if (errstr.len) {
         *b->last++ = ',';
-        b->last = ngx_copy(b->last,
-                conf->errstr_key.data, conf->errstr_key.len);
+        b->last = ngx_copy(b->last, conf->errstr_key.data,
+                           conf->errstr_key.len);
         *b->last++ = ':';
         *b->last++ = '"';
 
@@ -174,7 +174,7 @@ ngx_http_rds_json_ret_handler(ngx_http_request_t *r)
 
     if (b->last != b->end) {
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                "rds_json: rds_json_ret: buffer error");
+                      "rds_json: rds_json_ret: buffer error");
 
         return NGX_ERROR;
     }
