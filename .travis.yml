@@ -40,7 +40,7 @@ env:
     - TEST_NGINX_SLEEP=0.006
   matrix:
     - NGINX_VERSION=1.11.2
-    - NGINX_VERSION=1.13.6
+    - NGINX_VERSION=1.15.8
 
 services:
  - mysql
