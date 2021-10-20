@@ -332,7 +332,7 @@ GET /test
     upstream backend {
         drizzle_server $TEST_NGINX_MYSQL_HOST:$TEST_NGINX_MYSQL_PORT protocol=mysql
                        dbname=ngx_test user=ngx_test password=ngx_test
-                       charset=utf8;
+                       charset=utf8mb4;
     }
 
 --- config
@@ -358,7 +358,7 @@ GET /test
 {"errcode":0}
 {"errcode":0}
 {"errcode":0,"insert_id":1,"affected_rows":1}
-[{"id":1,"body":"a\r\nb\b??\u001a"}]
+[{"id":1,"body":"a\r\nb\b你好\u001a"}]
 --- timeout: 5
 
 

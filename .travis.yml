@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: bionic
 
 os: linux
 
@@ -25,7 +25,6 @@ cache:
 
 compiler:
   - gcc
-  - clang
 
 env:
   global:
@@ -39,8 +38,8 @@ env:
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.11.2
-    - NGINX_VERSION=1.19.3
+    - NGINX_VERSION=1.17.8
+    - NGINX_VERSION=1.19.9
 
 services:
  - mysql
@@ -69,6 +68,7 @@ install:
 
 before_script:
   - mysql -uroot -e 'create database ngx_test; grant all on ngx_test.* to "ngx_test"@"%" identified by "ngx_test"; flush privileges;'
+  - mysql -uroot -e 'alter database ngx_test character set utf8mb4 collate utf8mb4_unicode_ci;'
   - psql -c "create database ngx_test;" -U postgres
   - psql -c "create user ngx_test with password 'ngx_test';" -U postgres
   - psql -c "grant all privileges on database ngx_test to ngx_test;" -U postgres
@@ -85,4 +85,4 @@ script:
   - export NGX_BUILD_CC=$CC
   - sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
   - nginx -V
-  - prove -r t
+  - prove -I. -r t
