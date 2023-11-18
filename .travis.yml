@@ -1,8 +1,11 @@
 sudo: required
-dist: bionic
+dist: focal
 
 os: linux
 
+branches:
+  only:
+    - "master"
 language: c
 
 addons:
@@ -17,6 +20,7 @@ addons:
     - libtest-longstring-perl
     - liblist-moreutils-perl
     - libgd-dev
+  postgresql: "13"
 
 cache:
   apt: true
@@ -35,19 +39,19 @@ env:
     - LUA_INCLUDE_DIR=$LUAJIT_INC
     - LUA_CMODULE_DIR=/lib
     - JOBS=3
+    - DRIZZLE_VER=2011.07.21
     - NGX_BUILD_JOBS=$JOBS
     - TEST_NGINX_SLEEP=0.006
   matrix:
-    - NGINX_VERSION=1.17.8
-    - NGINX_VERSION=1.19.9
+    - NGINX_VERSION=1.25.1 NGX_EXTRA_OPT=--without-pcre2
 
 services:
  - mysql
  - postgresql
 
 install:
-  - if [ ! -f download-cache/drizzle7-2011.07.21.tar.gz ]; then wget -P download-cache/ http://openresty.org/download/drizzle7-2011.07.21.tar.gz; fi
-  - git clone https://github.com/openresty/nginx-devel-utils.git
+  - if [ ! -f download-cache/drizzle7-$DRIZZLE_VER.tar.gz ]; then wget -P download-cache https://github.com/openresty/openresty-deps-prebuild/releases/download/v20230902/drizzle7-$DRIZZLE_VER.tar.gz; fi
+  - git clone https://github.com/openresty/openresty-devel-utils.git
   - git clone https://github.com/openresty/openresty.git ../openresty
   - git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
   - git clone https://github.com/simpl/ngx_devel_kit.git ../ndk-nginx-module
@@ -67,7 +71,7 @@ install:
   - git clone https://github.com/openresty/openresty.git ../ngx_openresty
 
 before_script:
-  - mysql -uroot -e 'create database ngx_test; grant all on ngx_test.* to "ngx_test"@"%" identified by "ngx_test"; flush privileges;'
+  - mysql -uroot -e "create database ngx_test; CREATE USER 'ngx_test'@'%' IDENTIFIED WITH mysql_native_password BY 'ngx_test'; grant all on ngx_test.* to 'ngx_test'@'%'; flush privileges;"
   - mysql -uroot -e 'alter database ngx_test character set utf8mb4 collate utf8mb4_unicode_ci;'
   - psql -c "create database ngx_test;" -U postgres
   - psql -c "create user ngx_test with password 'ngx_test';" -U postgres
@@ -81,7 +85,7 @@ script:
   - make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' > build.log 2>&1 || (cat build.log && exit 1)
   - sudo make install PREFIX=$LUAJIT_PREFIX > build.log 2>&1 || (cat build.log && exit 1)
   - cd ../test-nginx && sudo cpanm . && cd ..
-  - export PATH=$PWD/work/nginx/sbin:$PWD/nginx-devel-utils:$PATH
+  - export PATH=$PWD/work/nginx/sbin:$PWD/openresty-devel-utils:$PATH
   - export NGX_BUILD_CC=$CC
   - sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
   - nginx -V

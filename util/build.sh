@@ -10,17 +10,18 @@ force=$2
 
 ngx-build $force $version \
           --with-cc-opt="-O1" \
-            --with-ld-opt="-Wl,-rpath,/opt/drizzle/lib:/opt/pg9/lib" \
-            --without-mail_pop3_module \
-            --without-mail_imap_module \
-            --without-mail_smtp_module \
-            --without-http_upstream_ip_hash_module \
-            --without-http_empty_gif_module \
-            --without-http_memcached_module \
-            --without-http_referer_module \
-            --without-http_autoindex_module \
-            --without-http_auth_basic_module \
-            --without-http_userid_module \
+          $NGX_EXTRA_OPT \
+          --with-ld-opt="-Wl,-rpath,/opt/drizzle/lib:/opt/pg9/lib" \
+          --without-mail_pop3_module \
+          --without-mail_imap_module \
+          --without-mail_smtp_module \
+          --without-http_upstream_ip_hash_module \
+          --without-http_empty_gif_module \
+          --without-http_memcached_module \
+          --without-http_referer_module \
+          --without-http_autoindex_module \
+          --without-http_auth_basic_module \
+          --without-http_userid_module \
           --add-module=$root/../eval-nginx-module \
           --add-module=$root/../echo-nginx-module \
           --add-module=$root/../xss-nginx-module \
