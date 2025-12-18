@@ -10,7 +10,6 @@ force=$2
 
 ngx-build $force $version \
           --with-cc-opt="-O1" \
-          $NGX_EXTRA_OPT \
           --with-ld-opt="-Wl,-rpath,/opt/drizzle/lib:/opt/pg9/lib" \
           --without-mail_pop3_module \
           --without-mail_imap_module \
