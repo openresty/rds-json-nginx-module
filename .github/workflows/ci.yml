@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: nginx 1.31.4
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            axel \
+            build-essential \
+            ca-certificates \
+            cpanminus \
+            git \
+            libgd-dev \
+            liblist-moreutils-perl \
+            libtest-base-perl \
+            libtest-longstring-perl \
+            libtext-diff-perl \
+            liburi-perl \
+            libwww-perl \
+            mysql-server \
+            postgresql \
+            wget
+          sudo systemctl start mysql
+          sudo systemctl start postgresql
+
+      - name: Build and test
+        env:
+          CC: gcc
+          NGINX_VERSION: 1.31.4
+        run: |
+          set -e
+          mkdir -p download-cache
+          export LUAJIT_PREFIX=/opt/luajit21
+          export LUAJIT_LIB=$LUAJIT_PREFIX/lib
+          export LD_LIBRARY_PATH=$LUAJIT_LIB:$LD_LIBRARY_PATH
+          export LUAJIT_INC=$LUAJIT_PREFIX/include/luajit-2.1
+          export LUA_INCLUDE_DIR=$LUAJIT_INC
+          export LUA_CMODULE_DIR=/lib
+          export JOBS=3
+          export DRIZZLE_VER=2011.07.21
+          export NGX_BUILD_JOBS=$JOBS
+          export TEST_NGINX_SLEEP=0.006
+          if [ ! -f download-cache/drizzle7-$DRIZZLE_VER.tar.gz ]; then wget -P download-cache https://github.com/openresty/openresty-deps-prebuild/releases/download/v20230902/drizzle7-$DRIZZLE_VER.tar.gz; fi
+          git clone https://github.com/openresty/openresty-devel-utils.git
+          git clone https://github.com/openresty/openresty.git ../openresty
+          git clone https://github.com/openresty/no-pool-nginx.git ../no-pool-nginx
+          git clone https://github.com/openresty/ngx_devel_kit.git ../ndk-nginx-module
+          git clone https://github.com/openresty/test-nginx.git
+          git clone -b v2.1-agentzh https://github.com/openresty/luajit2.git
+          git clone https://github.com/openresty/lua-nginx-module.git ../lua-nginx-module
+          git clone https://github.com/openresty/lua-resty-core.git ../lua-resty-core
+          git clone https://github.com/openresty/lua-resty-lrucache.git ../lua-resty-lrucache
+          git clone https://github.com/openresty/echo-nginx-module.git ../echo-nginx-module
+          git clone https://github.com/openresty/nginx-eval-module.git ../eval-nginx-module
+          git clone https://github.com/openresty/xss-nginx-module.git ../xss-nginx-module
+          git clone https://github.com/openresty/set-misc-nginx-module.git ../set-misc-nginx-module
+          git clone https://github.com/openresty/array-var-nginx-module.git ../array-var-nginx-module
+          git clone https://github.com/openresty/drizzle-nginx-module.git ../drizzle-nginx-module
+          git clone https://github.com/calio/form-input-nginx-module.git ../form-input-nginx-module
+          git clone https://github.com/openresty/ngx_postgres.git ../postgres-nginx-module
+          git clone https://github.com/openresty/openresty.git ../ngx_openresty
+          sudo mysql -uroot -e "create database ngx_test; CREATE USER 'ngx_test'@'%' IDENTIFIED WITH mysql_native_password BY 'ngx_test'; grant all on ngx_test.* to 'ngx_test'@'%'; flush privileges;"
+          sudo mysql -uroot -e 'alter database ngx_test character set utf8mb4 collate utf8mb4_unicode_ci;'
+          sudo -u postgres psql -c "create database ngx_test;" -U postgres
+          sudo -u postgres psql -c "create user ngx_test with password 'ngx_test';" -U postgres
+          sudo -u postgres psql -c "grant all privileges on database ngx_test to ngx_test;" -U postgres
+          tar xzf download-cache/drizzle7-2011.07.21.tar.gz && cd drizzle7-2011.07.21
+          ./configure --prefix=/usr --without-server > build.log 2>&1 || (cat build.log && exit 1)
+          sudo PATH=$PATH make libdrizzle-1.0 install-libdrizzle-1.0 > build.log 2>&1 || (cat build.log && exit 1)
+          cd ../luajit2
+          make -j$JOBS CCDEBUG=-g Q= PREFIX=$LUAJIT_PREFIX CC=$CC XCFLAGS='-DLUA_USE_APICHECK -DLUA_USE_ASSERT' > build.log 2>&1 || (cat build.log && exit 1)
+          sudo make install PREFIX=$LUAJIT_PREFIX > build.log 2>&1 || (cat build.log && exit 1)
+          cpanm --sudo --notest Test::Nginx IPC::Run Test2::Util > build.log 2>&1 || (cat build.log && exit 1)
+          cd ../test-nginx && sudo cpanm . && cd ..
+          export PATH=$PWD/work/nginx/sbin:$PWD/openresty-devel-utils:$PATH
+          export NGX_BUILD_CC=$CC
+          sh util/build.sh $NGINX_VERSION > build.log 2>&1 || (cat build.log && exit 1)
+          nginx -V
+          prove -I. -r t
